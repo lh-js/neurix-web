@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
-import { getUserInfo, logout as clearAuth } from '@/service/api/auth'
+import { getUserInfo, logout } from '@/service/api/auth'
 import { isAuthenticated } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 
@@ -32,13 +32,14 @@ export function useUser() {
         userStore.loading = false
       })
     } catch (error) {
-      // 如果获取用户信息失败，清除 token
+      // 获取用户信息失败，只更新状态
+      // token 清除由全局请求拦截器处理（401 错误时）
+      // 网络错误等其他错误不应该清除 token
       console.error('获取用户信息失败:', error)
       runInAction(() => {
         userStore.user = null
         userStore.loading = false
       })
-      clearAuth()
     }
   }
 
@@ -66,8 +67,8 @@ export function useUser() {
   }
 
   // 登出
-  const logout = () => {
-    clearAuth()
+  const handleLogout = () => {
+    logout()
     runInAction(() => {
       userStore.user = null
     })
@@ -83,7 +84,7 @@ export function useUser() {
     init,
     fetchUserInfo,
     refreshUserInfo,
-    logout,
+    logout: handleLogout,
   }
 }
 
