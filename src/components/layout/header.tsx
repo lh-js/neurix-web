@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
 import Link from "next/link"
 import { usePathname } from 'next/navigation'
 import { observer } from 'mobx-react-lite'
-import { useUser } from "@/hooks/common/use-user"
+import { useAuth } from "@/hooks/common/use-auth"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +17,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const Header = observer(() => {
-  const { user, loading, logout, init } = useUser()
+  const { user, loading, logout } = useAuth()
   const pathname = usePathname()
-
-  // 初始化 store（只在客户端，且只初始化一次）
-  useEffect(() => {
-    init()
-  }, [init])
 
   const getUserInitials = (nickname: string) => {
     return nickname.slice(0, 2).toUpperCase()

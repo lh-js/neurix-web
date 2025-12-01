@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { login } from '@/service/api/auth'
 import { setToken } from '@/utils/auth.util'
 import { DEFAULT_LOGIN_REDIRECT } from '@/config/auth.config'
-import { useUser } from '@/hooks/common/use-user'
+import { useAuth } from '@/hooks/common/use-auth'
 
 interface LoginFormData {
   email: string
@@ -13,7 +13,7 @@ interface LoginFormData {
 
 export function useLogin() {
   const router = useRouter()
-  const { refreshUserInfo } = useUser()
+  const { refreshUserInfo } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

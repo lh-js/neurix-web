@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
@@ -8,8 +9,9 @@ import { LOGIN_PATH } from '@/config/auth.config'
 /**
  * 使用用户 store 的 Hook
  * 提供用户数据和业务逻辑方法
+ * 自动初始化用户信息（只在客户端，且只初始化一次）
  */
-export function useUser() {
+export function useAuth() {
   // 获取用户信息
   const fetchUserInfo = async () => {
     if (!isAuthenticated()) {
@@ -51,20 +53,23 @@ export function useUser() {
     await fetchUserInfo()
   }
 
-  // 初始化 store（只在客户端调用）
-  const init = () => {
+  // 自动初始化（只在客户端调用，且只初始化一次）
+  useEffect(() => {
     if (userStore.initialized || typeof window === 'undefined') {
       return
     }
+    
     runInAction(() => {
       userStore.initialized = true
     })
+    
     // 如果有 token 且还没有用户信息，自动获取用户信息（页面刷新后也能保持）
     // 如果已经有用户信息，说明已经获取过了，不需要重复获取
     if (isAuthenticated() && !userStore.user) {
       fetchUserInfo()
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // 登出
   const handleLogout = () => {
@@ -81,7 +86,6 @@ export function useUser() {
     user: userStore.user,
     loading: userStore.loading,
     initialized: userStore.initialized,
-    init,
     fetchUserInfo,
     refreshUserInfo,
     logout: handleLogout,
