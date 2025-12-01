@@ -214,6 +214,7 @@ export default function RoleUrlPage() {
                   <TableHead>URL</TableHead>
                   <TableHead>描述</TableHead>
                   <TableHead>类型</TableHead>
+                  <TableHead>创建时间</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -231,6 +232,11 @@ export default function RoleUrlPage() {
                       >
                         {getTypeLabel(item.type)}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {item.create_time
+                        ? new Date(item.create_time).toLocaleString('zh-CN')
+                        : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
