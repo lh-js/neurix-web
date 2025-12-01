@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## 提交类型 (type)
+- feat: 新功能
+- fix: 修复 bug
+- docs: 文档变更
+- style: 代码风格（不影响代码逻辑）
+- refactor: 重构代码（非功能或 bug 修复）
+- perf: 性能优化
+- test: 添加或修改测试
+- chore: 构建过程或辅助工具的变动
+- build: 构建系统或外部依赖的变更
+- ci: 持续集成配置的变更
+- revert: 回滚之前的提交
+
