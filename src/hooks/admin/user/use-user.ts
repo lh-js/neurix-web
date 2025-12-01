@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getUserList } from '@/service/api/user'
-import { UserListResponse, User } from '@/service/types/user'
+import { UserListResponse } from '@/service/types/user'
 
 export function useUserList() {
   const [data, setData] = useState<UserListResponse | null>(null)
