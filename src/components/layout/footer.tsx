@@ -38,7 +38,7 @@ export default function Footer() {
                   主页
                 </Link>
                 <Link 
-                  href="/admin/login" 
+                  href="/login" 
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   管理员登录
