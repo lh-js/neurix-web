@@ -35,13 +35,10 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       <div className="flex flex-1 overflow-hidden">
         {showSidebar && <Sidebar />}
         <main className="flex-1 overflow-y-auto min-h-0">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-            {children}
-          </div>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">{children}</div>
         </main>
       </div>
       <Footer />
     </AuthGuard>
   )
 }
-

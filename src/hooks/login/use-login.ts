@@ -28,18 +28,18 @@ export function useLogin() {
       })
       // 保存 token
       setToken(response.access_token, formData.rememberMe)
-      
+
       // 验证 token 是否已保存
       if (typeof window !== 'undefined') {
-        const savedToken = formData.rememberMe 
+        const savedToken = formData.rememberMe
           ? localStorage.getItem('token')
           : sessionStorage.getItem('token')
-        
+
         if (!savedToken) {
           throw new Error('Token 保存失败，请重试')
         }
       }
-      
+
       // 获取用户信息
       await refreshUserInfo()
       // 跳转到默认页面
@@ -60,4 +60,3 @@ export function useLogin() {
     handleLogin,
   }
 }
-

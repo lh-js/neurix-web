@@ -30,4 +30,3 @@ export interface UserListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
-

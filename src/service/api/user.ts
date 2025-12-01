@@ -11,4 +11,3 @@ export async function getUserList(params: UserListParams): Promise<UserListRespo
   })
   return response
 }
-

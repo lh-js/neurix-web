@@ -62,7 +62,7 @@ request.interceptors.request.use(
 
 // 响应拦截器
 request.interceptors.response.use(
-  (response) => {
+  response => {
     const { data } = response
 
     // 根据后端返回的数据结构处理

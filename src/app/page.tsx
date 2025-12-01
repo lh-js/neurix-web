@@ -1,7 +1,5 @@
-import Home from "./home/page";
+import Home from './home/page'
 
 export default function Index() {
-  return (
-    <Home />
-  );
+  return <Home />
 }

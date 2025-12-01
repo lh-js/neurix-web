@@ -1,9 +1,9 @@
 'use client'
 
-import Link from "next/link"
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { observer } from 'mobx-react-lite'
-import { useAuth } from "@/hooks/common/use-auth"
+import { useAuth } from '@/hooks/common/use-auth'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const Header = observer(() => {
   const { user, loading, logout } = useAuth()
@@ -34,8 +34,8 @@ const Header = observer(() => {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-sm">
       <div className="w-full flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-8">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center space-x-2 group transition-all duration-200 hover:opacity-80"
           >
             <div className="relative">
@@ -48,8 +48,8 @@ const Header = observer(() => {
             </div>
           </Link>
           <nav className="hidden md:flex items-center space-x-1">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${
                 isActive('/')
                   ? 'text-foreground bg-accent'
@@ -61,8 +61,8 @@ const Header = observer(() => {
                 <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
               )}
             </Link>
-            <Link 
-              href="/home" 
+            <Link
+              href="/home"
               className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${
                 isActive('/home')
                   ? 'text-foreground bg-accent'
@@ -82,8 +82,8 @@ const Header = observer(() => {
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="relative h-10 w-10 rounded-full hover:bg-accent transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   <Avatar className="ring-2 ring-border hover:ring-primary/50 transition-all duration-200">
@@ -116,7 +116,7 @@ const Header = observer(() => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={logout}
                   className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                 >
@@ -132,4 +132,3 @@ const Header = observer(() => {
 })
 
 export default Header
-

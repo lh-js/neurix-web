@@ -54,4 +54,3 @@ export async function updateRoleUrl(id: number, data: UpdateRoleUrlRequest): Pro
 export async function deleteRoleUrl(id: number): Promise<void> {
   await del(`/role-url/${id}`)
 }
-

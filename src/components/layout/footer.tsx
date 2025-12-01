@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from 'next/link'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -25,20 +25,20 @@ export default function Footer() {
             <div className="flex flex-col space-y-4">
               <h3 className="text-sm font-semibold text-foreground">快速链接</h3>
               <nav className="flex flex-col space-y-3">
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   首页
                 </Link>
-                <Link 
-                  href="/home" 
+                <Link
+                  href="/home"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   主页
                 </Link>
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   管理员登录
@@ -50,20 +50,20 @@ export default function Footer() {
             <div className="flex flex-col space-y-4">
               <h3 className="text-sm font-semibold text-foreground">资源</h3>
               <nav className="flex flex-col space-y-3">
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   文档
                 </a>
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   API 参考
                 </a>
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   帮助中心
@@ -75,14 +75,14 @@ export default function Footer() {
             <div className="flex flex-col space-y-4">
               <h3 className="text-sm font-semibold text-foreground">联系我们</h3>
               <div className="flex flex-col space-y-3">
-                <a 
-                  href="mailto:support@neurix.com" 
+                <a
+                  href="mailto:support@neurix.com"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   support@neurix.com
                 </a>
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >
                   意见反馈
@@ -100,14 +100,14 @@ export default function Footer() {
               © {currentYear} Neurix. All rights reserved.
             </p>
             <div className="flex items-center space-x-4">
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 隐私政策
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 服务条款
@@ -119,4 +119,3 @@ export default function Footer() {
     </footer>
   )
 }
-

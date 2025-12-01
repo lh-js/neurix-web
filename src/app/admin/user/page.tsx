@@ -75,12 +75,8 @@ export default function UserPage() {
               <TableBody>
                 {data.list.map((user: User) => (
                   <TableRow key={user.id}>
-                    <TableCell className="text-muted-foreground">
-                      {user.id}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {user.email}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{user.id}</TableCell>
+                    <TableCell className="font-medium">{user.email}</TableCell>
                     <TableCell>{user.nickname}</TableCell>
                     <TableCell>
                       <span
@@ -106,68 +102,68 @@ export default function UserPage() {
               <div className="flex-shrink-0">
                 <Pagination className="w-auto mx-0">
                   <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (data.hasPreviousPage && !loading) {
-                          handlePageChange(page - 1)
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={e => {
+                          e.preventDefault()
+                          if (data.hasPreviousPage && !loading) {
+                            handlePageChange(page - 1)
+                          }
+                        }}
+                        className={
+                          !data.hasPreviousPage || loading
+                            ? 'pointer-events-none opacity-50'
+                            : 'cursor-pointer'
                         }
-                      }}
-                      className={
-                        !data.hasPreviousPage || loading
-                          ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
+                      />
+                    </PaginationItem>
+                    {getPageNumbers().map((pageItem, index) => {
+                      if (pageItem === 'ellipsis') {
+                        return (
+                          <PaginationItem key={`ellipsis-${index}`}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )
                       }
-                    />
-                  </PaginationItem>
-                  {getPageNumbers().map((pageItem, index) => {
-                    if (pageItem === 'ellipsis') {
+
+                      const pageNumber = pageItem
                       return (
-                        <PaginationItem key={`ellipsis-${index}`}>
-                          <PaginationEllipsis />
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            href="#"
+                            onClick={e => {
+                              e.preventDefault()
+                              if (!loading) {
+                                handlePageChange(pageNumber)
+                              }
+                            }}
+                            isActive={pageNumber === page}
+                            className={
+                              loading ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                            }
+                          >
+                            {pageNumber}
+                          </PaginationLink>
                         </PaginationItem>
                       )
-                    }
-
-                    const pageNumber = pageItem
-                    return (
-                      <PaginationItem key={pageNumber}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            if (!loading) {
-                              handlePageChange(pageNumber)
-                            }
-                          }}
-                          isActive={pageNumber === page}
-                          className={
-                            loading ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                    })}
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={e => {
+                          e.preventDefault()
+                          if (data.hasNextPage && !loading) {
+                            handlePageChange(page + 1)
                           }
-                        >
-                          {pageNumber}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  })}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (data.hasNextPage && !loading) {
-                          handlePageChange(page + 1)
+                        }}
+                        className={
+                          !data.hasNextPage || loading
+                            ? 'pointer-events-none opacity-50'
+                            : 'cursor-pointer'
                         }
-                      }}
-                      className={
-                        !data.hasNextPage || loading
-                          ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
-                      }
-                    />
-                  </PaginationItem>
+                      />
+                    </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               </div>

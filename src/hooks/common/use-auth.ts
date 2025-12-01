@@ -58,11 +58,11 @@ export function useAuth() {
     if (userStore.initialized || typeof window === 'undefined') {
       return
     }
-    
+
     runInAction(() => {
       userStore.initialized = true
     })
-    
+
     // 如果有 token 且还没有用户信息，自动获取用户信息（页面刷新后也能保持）
     // 如果已经有用户信息，说明已经获取过了，不需要重复获取
     if (isAuthenticated() && !userStore.user) {
@@ -97,4 +97,3 @@ export function useAuth() {
  * 用于组件自动响应 store 变化
  */
 export const withUser = observer
-

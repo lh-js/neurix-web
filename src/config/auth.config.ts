@@ -59,5 +59,3 @@ export function isProtectedRoute(pathname: string): boolean {
 export function shouldShowSidebar(pathname: string): boolean {
   return pathname.startsWith('/admin')
 }
-
-

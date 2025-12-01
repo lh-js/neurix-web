@@ -13,4 +13,3 @@ class UserStore {
 
 // 创建单例 store
 export const userStore = new UserStore()
-

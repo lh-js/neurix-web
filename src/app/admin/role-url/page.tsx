@@ -40,11 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Pagination,
   PaginationContent,
@@ -100,7 +96,7 @@ export default function RoleUrlPage() {
     setEditingItem(item)
     setDialogLoading(true)
     setIsDialogOpen(true)
-    
+
     try {
       // 通过接口获取最新的数据
       const roleUrl = await fetchRoleUrlById(item.id)
@@ -145,7 +141,7 @@ export default function RoleUrlPage() {
 
   const confirmDelete = async () => {
     if (deletingId === null) return
-    
+
     try {
       await handleDelete(deletingId)
       toast.success('删除成功')
@@ -222,42 +218,36 @@ export default function RoleUrlPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.list.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="text-muted-foreground">
-                    {item.id}
-                  </TableCell>
-                  <TableCell className="font-medium">{item.url}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeBadgeClass(
-                        item.type
-                      )}`}
-                    >
-                      {getTypeLabel(item.type)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(item)}
+                {data.list.map(item => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-muted-foreground">{item.id}</TableCell>
+                    <TableCell className="font-medium">{item.url}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeBadgeClass(
+                          item.type
+                        )}`}
                       >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteClick(item.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                        {getTypeLabel(item.type)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(item.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -273,7 +263,7 @@ export default function RoleUrlPage() {
                     <PaginationItem>
                       <PaginationPrevious
                         href="#"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.preventDefault()
                           if (data.hasPreviousPage && !loading) {
                             handlePageChange(page - 1)
@@ -300,7 +290,7 @@ export default function RoleUrlPage() {
                         <PaginationItem key={pageNumber}>
                           <PaginationLink
                             href="#"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault()
                               if (!loading) {
                                 handlePageChange(pageNumber)
@@ -319,7 +309,7 @@ export default function RoleUrlPage() {
                     <PaginationItem>
                       <PaginationNext
                         href="#"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.preventDefault()
                           if (data.hasNextPage && !loading) {
                             handlePageChange(page + 1)
@@ -349,13 +339,9 @@ export default function RoleUrlPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingItem ? '编辑权限URL' : '新增权限URL'}
-            </DialogTitle>
+            <DialogTitle>{editingItem ? '编辑权限URL' : '新增权限URL'}</DialogTitle>
             <DialogDescription>
-              {editingItem
-                ? '修改权限URL信息'
-                : '创建一个新的权限URL'}
+              {editingItem ? '修改权限URL信息' : '创建一个新的权限URL'}
             </DialogDescription>
           </DialogHeader>
           {dialogLoading ? (
@@ -371,9 +357,7 @@ export default function RoleUrlPage() {
                 <Input
                   id="url"
                   value={formData.url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, url: e.target.value })
-                  }
+                  onChange={e => setFormData({ ...formData, url: e.target.value })}
                   placeholder="请输入URL"
                   disabled={dialogLoading}
                 />
@@ -383,9 +367,7 @@ export default function RoleUrlPage() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                   placeholder="请输入描述"
                   disabled={dialogLoading}
                 />
@@ -394,7 +376,7 @@ export default function RoleUrlPage() {
                 <Label htmlFor="type">类型</Label>
                 <Select
                   value={formData.type.toString()}
-                  onValueChange={(value) =>
+                  onValueChange={value =>
                     setFormData({ ...formData, type: parseInt(value) as RoleUrlType })
                   }
                   disabled={dialogLoading}
@@ -435,9 +417,7 @@ export default function RoleUrlPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingId(null)}>
-              取消
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeletingId(null)}>取消</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -450,4 +430,3 @@ export default function RoleUrlPage() {
     </div>
   )
 }
-

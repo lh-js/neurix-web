@@ -52,4 +52,3 @@ export interface RoleUrlListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
-

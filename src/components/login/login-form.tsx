@@ -27,12 +27,8 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-6">
       {/* Logo/Title */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Neurix
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          管理员登录
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Neurix</h1>
+        <p className="text-gray-600 dark:text-gray-400">管理员登录</p>
       </div>
 
       {/* Error Message */}
@@ -51,7 +47,7 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             required
             disabled={loading}
             placeholder="请输入邮箱地址"
@@ -65,7 +61,7 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
             disabled={loading}
             placeholder="请输入密码"
@@ -77,28 +73,19 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
           <Checkbox
             id="remember"
             checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked === true)}
+            onCheckedChange={checked => setRememberMe(checked === true)}
             disabled={loading}
           />
-          <Label
-            htmlFor="remember"
-            className="text-sm font-normal cursor-pointer"
-          >
+          <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
             记住我
           </Label>
         </div>
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full"
-          size="lg"
-        >
+        <Button type="submit" disabled={loading} className="w-full" size="lg">
           {loading ? '登录中...' : '登录'}
         </Button>
       </form>
     </div>
   )
 }
-
