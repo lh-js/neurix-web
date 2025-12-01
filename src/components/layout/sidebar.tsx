@@ -40,7 +40,7 @@ export default function Sidebar() {
               'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200',
               'hover:bg-accent/50 hover:text-foreground',
               'text-muted-foreground',
-              (isActive('/admin/user') || isActive('/admin/role-url')) &&
+              (isActive('/admin/user') || isActive('/admin/role-url') || isActive('/admin/role')) &&
                 'text-foreground bg-accent/30'
             )}
           >
@@ -82,6 +82,20 @@ export default function Sidebar() {
             >
               <Shield className="h-4 w-4" />
               <span>权限URL</span>
+            </Link>
+            {/* 用户权限管理 - 可跳转 */}
+            <Link
+              href="/admin/role"
+              className={cn(
+                'flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-all duration-200',
+                'hover:bg-accent/50 hover:text-foreground',
+                isActive('/admin/role')
+                  ? 'bg-accent text-foreground font-medium'
+                  : 'text-muted-foreground'
+              )}
+            >
+              <Shield className="h-4 w-4" />
+              <span>用户权限管理</span>
             </Link>
           </CollapsibleContent>
         </Collapsible>

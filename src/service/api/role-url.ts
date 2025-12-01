@@ -54,3 +54,11 @@ export async function updateRoleUrl(id: number, data: UpdateRoleUrlRequest): Pro
 export async function deleteRoleUrl(id: number): Promise<void> {
   await del(`/role-url/${id}`)
 }
+
+/**
+ * 获取所有权限URL（不分页，用于选择）
+ */
+export async function getAllRoleUrls(): Promise<RoleUrl[]> {
+  const response = await get<RoleUrl[]>('/role-url/all')
+  return response
+}
