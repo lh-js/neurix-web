@@ -234,9 +234,7 @@ export default function RoleUrlPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {item.create_time
-                        ? new Date(item.create_time).toLocaleString('zh-CN')
-                        : '-'}
+                      {item.create_time ? new Date(item.create_time).toLocaleString('zh-CN') : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
