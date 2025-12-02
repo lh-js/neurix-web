@@ -5,9 +5,29 @@ export interface User {
   id: number
   email: string
   nickname: string
-  role: number // 0: 普通用户, 1: 管理员
+  role: number // 角色ID
   tokens: number
   usage: number
+  createTime?: string
+}
+
+/**
+ * 创建用户请求参数
+ */
+export interface CreateUserRequest {
+  email: string
+  nickname: string
+  password: string
+  role: number
+}
+
+/**
+ * 更新用户请求参数
+ */
+export interface UpdateUserRequest {
+  email?: string
+  nickname?: string
+  role?: number
 }
 
 /**

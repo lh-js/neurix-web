@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
-import { getUserList } from '@/service/api/user'
-import { UserListResponse } from '@/service/types/user'
+import {
+  getUserList,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+} from '@/service/api/user'
+import {
+  User,
+  UserListResponse,
+  CreateUserRequest,
+  UpdateUserRequest,
+} from '@/service/types/user'
 
 export function useUserList() {
   const [data, setData] = useState<UserListResponse | null>(null)
@@ -10,36 +21,85 @@ export function useUserList() {
   const [pageSize] = useState(10)
   const fetchingRef = useRef(false)
 
-  useEffect(() => {
-    // 防止重复请求
+  // 获取列表
+  const fetchList = async () => {
     if (fetchingRef.current) {
       return
     }
 
     fetchingRef.current = true
+    setLoading(true)
+    setError(null)
 
-    const fetchUsers = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await getUserList({ page, pageSize })
-        setData(response)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : '获取用户列表失败'
-        setError(errorMessage)
-        console.error('获取用户列表失败:', err)
-      } finally {
-        setLoading(false)
-        fetchingRef.current = false
-      }
+    try {
+      const response = await getUserList({ page, pageSize })
+      setData(response)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取用户列表失败'
+      setError(errorMessage)
+      console.error('获取用户列表失败:', err)
+    } finally {
+      setLoading(false)
+      fetchingRef.current = false
     }
+  }
 
-    fetchUsers()
+  useEffect(() => {
+    fetchList()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize])
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= (data?.totalPages || 1)) {
       setPage(newPage)
+    }
+  }
+
+  // 获取单个用户
+  const fetchUserById = async (id: number): Promise<User> => {
+    try {
+      const user = await getUserById(id)
+      return user
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取用户详情失败'
+      setError(errorMessage)
+      throw err
+    }
+  }
+
+  // 创建
+  const handleCreate = async (createData: CreateUserRequest) => {
+    try {
+      await createUser(createData)
+      await fetchList()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '创建用户失败'
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+  }
+
+  // 更新
+  const handleUpdate = async (id: number, updateData: UpdateUserRequest) => {
+    try {
+      await updateUser(id, updateData)
+      await fetchList()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '更新用户失败'
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+  }
+
+  // 删除
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteUser(id)
+      await fetchList()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '删除用户失败'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -106,6 +166,11 @@ export function useUserList() {
     page,
     pageSize,
     handlePageChange,
+    fetchList,
+    fetchUserById,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
     getRoleLabel,
     getRoleBadgeClass,
     getPageNumbers,

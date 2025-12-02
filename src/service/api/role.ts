@@ -48,3 +48,11 @@ export async function updateRole(id: number, data: UpdateRoleRequest): Promise<R
 export async function deleteRole(id: number): Promise<void> {
   await del(`/role/${id}`)
 }
+
+/**
+ * 获取所有角色（不分页，用于选择）
+ */
+export async function getAllRoles(): Promise<Role[]> {
+  const response = await get<Role[]>('/role/all')
+  return response
+}
