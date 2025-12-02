@@ -59,6 +59,7 @@ export default function RolePage() {
     handleUpdate,
     handleDelete,
     fetchRoleById,
+    fetchList,
     getPageNumbers,
   } = useRole()
 
