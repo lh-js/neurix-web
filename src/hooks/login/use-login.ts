@@ -27,7 +27,7 @@ export function useLogin() {
         password: formData.password,
       })
       // 保存 token
-      setToken(response.access_token, formData.rememberMe)
+      setToken(response.accessToken, formData.rememberMe)
 
       // 验证 token 是否已保存
       if (typeof window !== 'undefined') {

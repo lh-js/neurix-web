@@ -10,7 +10,7 @@ export interface LoginRequest {
  * 登录响应数据
  */
 export interface LoginResponse {
-  access_token: string
+  accessToken: string
 }
 
 /**
