@@ -15,10 +15,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTheme } from '@/hooks/common/use-theme'
 
 const Header = observer(() => {
   const { user, loading, logout } = useAuth()
   const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
 
   const getUserInitials = (nickname: string) => {
     return nickname.slice(0, 2).toUpperCase()
@@ -77,6 +79,47 @@ const Header = observer(() => {
           </nav>
         </div>
         <div className="flex items-center space-x-3">
+          {/* 主题切换器 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-9 h-9 rounded-full hover:bg-accent transition-colors"
+                aria-label="切换主题"
+              >
+                <span className="text-lg">
+                  {theme === 'light' && '🌞'}
+                  {theme === 'dark' && '🌙'}
+                  {theme === 'system' && '💻'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">主题</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setTheme('light')}
+              >
+                明亮主题 {theme === 'light' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setTheme('dark')}
+              >
+                暗黑主题 {theme === 'dark' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setTheme('system')}
+              >
+                跟随系统 {theme === 'system' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* 用户信息 */}
           {loading ? (
             <Skeleton className="h-10 w-10 rounded-full" />
           ) : user ? (

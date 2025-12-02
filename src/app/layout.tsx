@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 
 export const metadata: Metadata = {
   title: 'Neurix',
@@ -14,10 +15,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className="h-screen flex flex-col">
-        <ConditionalLayout>{children}</ConditionalLayout>
-        <Toaster />
+        <ThemeProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

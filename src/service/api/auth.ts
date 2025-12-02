@@ -23,6 +23,6 @@ export function logout(): void {
  * 获取用户信息 API
  */
 export async function getUserInfo(): Promise<UserInfo> {
-  const response = await get<UserInfo>('/auth/userInfo')
+  const response = await get<UserInfo>('/auth/user-info')
   return response
 }
