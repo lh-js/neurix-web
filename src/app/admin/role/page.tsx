@@ -70,8 +70,8 @@ export default function RolePage() {
     name: '',
     description: '',
     level: 0,
-    accessible_pages: [],
-    accessible_apis: [],
+    accessiblePages: [],
+    accessibleApis: [],
   })
   const [dialogLoading, setDialogLoading] = useState(false)
   const [roleUrls, setRoleUrls] = useState<RoleUrl[]>([])
@@ -113,8 +113,8 @@ export default function RolePage() {
       name: '',
       description: '',
       level: 0,
-      accessible_pages: [],
-      accessible_apis: [],
+      accessiblePages: [],
+      accessibleApis: [],
     })
     setIsDialogOpen(true)
   }
@@ -131,8 +131,8 @@ export default function RolePage() {
         name: role.name,
         description: role.description,
         level: role.level,
-        accessible_pages: role.accessible_pages || [],
-        accessible_apis: role.accessible_apis || [],
+        accessiblePages: role.accessiblePages || [],
+        accessibleApis: role.accessibleApis || [],
       })
       setEditingItem(role)
     } catch {
@@ -141,8 +141,8 @@ export default function RolePage() {
         name: item.name,
         description: item.description,
         level: item.level,
-        accessible_pages: item.accessible_pages || [],
-        accessible_apis: item.accessible_apis || [],
+        accessiblePages: item.accessiblePages || [],
+        accessibleApis: item.accessibleApis || [],
       })
       toast.error('获取详情失败，使用列表数据')
     } finally {
@@ -186,20 +186,20 @@ export default function RolePage() {
   // 切换页面权限
   const togglePageUrl = (url: string) => {
     setFormData(prev => {
-      const pages = prev.accessible_pages.includes(url)
-        ? prev.accessible_pages.filter(u => u !== url)
-        : [...prev.accessible_pages, url]
-      return { ...prev, accessible_pages: pages }
+      const pages = prev.accessiblePages.includes(url)
+        ? prev.accessiblePages.filter(u => u !== url)
+        : [...prev.accessiblePages, url]
+      return { ...prev, accessiblePages: pages }
     })
   }
 
   // 切换接口权限
   const toggleApiUrl = (url: string) => {
     setFormData(prev => {
-      const apis = prev.accessible_apis.includes(url)
-        ? prev.accessible_apis.filter(u => u !== url)
-        : [...prev.accessible_apis, url]
-      return { ...prev, accessible_apis: apis }
+      const apis = prev.accessibleApis.includes(url)
+        ? prev.accessibleApis.filter(u => u !== url)
+        : [...prev.accessibleApis, url]
+      return { ...prev, accessibleApis: apis }
     })
   }
 
@@ -260,17 +260,17 @@ export default function RolePage() {
                     <TableCell>{item.description}</TableCell>
                     <TableCell>{item.level}</TableCell>
                     <TableCell>
-                      {item.accessible_pages && item.accessible_pages.length > 0
-                        ? `${item.accessible_pages.length} 个`
+                      {item.accessiblePages && item.accessiblePages.length > 0
+                        ? `${item.accessiblePages.length} 个`
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      {item.accessible_apis && item.accessible_apis.length > 0
-                        ? `${item.accessible_apis.length} 个`
+                      {item.accessibleApis && item.accessibleApis.length > 0
+                        ? `${item.accessibleApis.length} 个`
                         : '-'}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatTime(item.create_time)}
+                      {formatTime(item.createTime)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -437,7 +437,7 @@ export default function RolePage() {
                       <div key={url.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`page-${url.id}`}
-                          checked={formData.accessible_pages.includes(url.url)}
+                          checked={formData.accessiblePages.includes(url.url)}
                           onCheckedChange={() => togglePageUrl(url.url)}
                           disabled={dialogLoading}
                         />
@@ -472,7 +472,7 @@ export default function RolePage() {
                       <div key={url.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`api-${url.id}`}
-                          checked={formData.accessible_apis.includes(url.url)}
+                          checked={formData.accessibleApis.includes(url.url)}
                           onCheckedChange={() => toggleApiUrl(url.url)}
                           disabled={dialogLoading}
                         />

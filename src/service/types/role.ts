@@ -6,9 +6,9 @@ export interface Role {
   name: string
   description: string
   level: number
-  accessible_pages: string[] | null
-  accessible_apis: string[] | null
-  create_time: string
+  accessiblePages: string[] | null
+  accessibleApis: string[] | null
+  createTime: string
 }
 
 /**
@@ -18,8 +18,8 @@ export interface CreateRoleRequest {
   name: string
   description: string
   level: number
-  accessible_pages: string[]
-  accessible_apis: string[]
+  accessiblePages: string[]
+  accessibleApis: string[]
 }
 
 /**
@@ -29,8 +29,8 @@ export interface UpdateRoleRequest {
   name?: string
   description?: string
   level?: number
-  accessible_pages?: string[]
-  accessible_apis?: string[]
+  accessiblePages?: string[]
+  accessibleApis?: string[]
 }
 
 /**
