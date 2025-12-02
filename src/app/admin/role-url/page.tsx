@@ -233,9 +233,9 @@ export default function RoleUrlPage() {
                         {getTypeLabel(item.type)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {item.create_time ? new Date(item.create_time).toLocaleString('zh-CN') : '-'}
-                    </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+                        </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>

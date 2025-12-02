@@ -11,7 +11,7 @@ export interface RoleUrl {
   url: string
   description: string
   type: RoleUrlType
-  create_time?: string
+  createTime?: string
 }
 
 /**
