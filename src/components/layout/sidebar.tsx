@@ -104,7 +104,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 border-r border-border/40 bg-background/50 backdrop-blur-sm h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-64 border-r border-border/40 bg-background/50 backdrop-blur-sm sticky top-16 self-start h-fit max-h-[calc(100vh-4rem)] overflow-y-auto">
       <nav className="flex-1 p-4 space-y-1">
         {sidebarMenuConfig.map(item => (
           <div key={item.id}>{renderMenuItem(item)}</div>

@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className="min-h-screen flex flex-col">
+      <body className="h-screen flex flex-col">
         <ConditionalLayout>{children}</ConditionalLayout>
         <Toaster />
       </body>
