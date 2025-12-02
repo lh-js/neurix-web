@@ -45,7 +45,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@/components/ui/pagination'
-import { Shield, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function RolePage() {
@@ -216,10 +216,16 @@ export default function RolePage() {
           <Shield className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-bold text-foreground">用户权限管理</h1>
         </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          新增
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={fetchList} variant="outline" disabled={loading}>
+            <Search className="h-4 w-4 mr-2" />
+            查询
+          </Button>
+          <Button onClick={openCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            新增
+          </Button>
+        </div>
       </div>
 
       {/* 错误提示 */}
