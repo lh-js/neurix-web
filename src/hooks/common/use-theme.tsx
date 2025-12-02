@@ -37,7 +37,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null
     const initial = stored || 'system'
     setThemeState(initial)
+    
+    // 检查内联脚本是否已经应用了主题
+    const themeApplied = document.documentElement.getAttribute('data-theme-applied')
+    if (themeApplied === 'true') {
+      // 内联脚本已经应用了主题，检查当前状态是否正确
+      const resolved = initial === 'system' ? getSystemTheme() : initial
+      const isDark = resolved === 'dark'
+      const hasDarkClass = document.documentElement.classList.contains('dark')
+      
+      // 如果状态不一致，才需要应用主题
+      if (isDark !== hasDarkClass) {
+        applyTheme(initial)
+      }
+    } else {
+      // 如果内联脚本没有应用，则应用主题
     applyTheme(initial)
+    }
 
     if (initial === 'system') {
       const mql = window.matchMedia('(prefers-color-scheme: dark)')

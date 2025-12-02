@@ -123,9 +123,10 @@ export function useRoleUrl() {
 
   // 获取类型样式类
   const getTypeBadgeClass = (type: RoleUrlType): string => {
+    // 为页面和接口类型设置不同的颜色，确保在明暗主题下都有良好的对比度
     return type === 0
-      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+      ? 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' // 页面 - 蓝色
+      : 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400' // 接口 - 绿色
   }
 
   useEffect(() => {

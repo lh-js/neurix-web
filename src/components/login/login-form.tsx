@@ -24,11 +24,11 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 space-y-6">
+    <div className="bg-card rounded-2xl shadow-xl p-8 space-y-6 border border-border">
       {/* Logo/Title */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Neurix</h1>
-        <p className="text-gray-600 dark:text-gray-400">管理员登录</p>
+        <h1 className="text-3xl font-bold text-foreground">Neurix</h1>
+        <p className="text-muted-foreground">管理员登录</p>
       </div>
 
       {/* Error Message */}

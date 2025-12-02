@@ -108,9 +108,43 @@ export function useUserList() {
   }
 
   const getRoleBadgeClass = (role: number): string => {
-    return role === 1
-      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+    // 为不同角色ID设置不同的颜色方案
+    // 使用预定义的颜色数组，确保在明暗主题下都有良好的对比度
+    const roleColors: Record<number, string> = {
+      1: 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', // 管理员 - 蓝色
+      2: 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400', // 绿色
+      3: 'bg-purple-500/10 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400', // 紫色
+      4: 'bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400', // 橙色
+      5: 'bg-pink-500/10 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400', // 粉色
+      6: 'bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400', // 青色
+      7: 'bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400', // 靛蓝色
+      8: 'bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400', // 琥珀色
+      9: 'bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400', // 蓝绿色
+      10: 'bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400', // 红色
+    }
+
+    // 如果角色ID在预定义的颜色中，使用预定义颜色
+    if (roleColors[role]) {
+      return roleColors[role]
+    }
+
+    // 对于其他角色ID，使用颜色数组循环分配
+    const colorPalette = [
+      'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
+      'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400',
+      'bg-purple-500/10 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400',
+      'bg-orange-500/10 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400',
+      'bg-pink-500/10 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400',
+      'bg-cyan-500/10 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400',
+      'bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400',
+      'bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+      'bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400',
+      'bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400',
+    ]
+    
+    // 使用角色ID取模来循环使用颜色
+    const colorIndex = (role - 1) % colorPalette.length
+    return colorPalette[colorIndex]
   }
 
   // 生成分页页码数组（智能显示）
