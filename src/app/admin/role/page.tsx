@@ -362,10 +362,15 @@ export default function RolePage() {
   // 全选/取消全选接口权限
   const toggleAllApis = () => {
     setFormData(prev => {
-      const allApiUrls = roleApis.map(api => api.url)
-      const allSelected = allApiUrls.every(url =>
-        prev.accessibleApis.some(api => api.url === url)
-      )
+      // 检查是否所有接口的所有 method 都被选中
+      const allSelected = roleApis.every(api => {
+        const selectedApi = prev.accessibleApis.find(a => a.url === api.url)
+        if (!selectedApi) return false
+        // 检查该接口的所有 method 是否都被选中
+        const apiMethods = api.method || []
+        return apiMethods.every(method => selectedApi.method.includes(method))
+      })
+
       if (allSelected) {
         // 取消全选：移除所有接口
         return {
@@ -696,9 +701,13 @@ export default function RolePage() {
                       disabled={dialogLoading}
                       className="h-7 text-xs"
                     >
-                      {roleApis.every(api =>
-                        formData.accessibleApis.some(a => a.url === api.url)
-                      )
+                      {roleApis.every(api => {
+                        const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
+                        if (!selectedApi) return false
+                        // 检查该接口的所有 method 是否都被选中
+                        const apiMethods = api.method || []
+                        return apiMethods.every(method => selectedApi.method.includes(method))
+                      })
                         ? '取消全选'
                         : '全选'}
                     </Button>
