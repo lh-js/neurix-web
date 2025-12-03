@@ -39,3 +39,22 @@ export const clearAuth = () => {
     sessionStorage.removeItem('token')
   }
 }
+
+/**
+ * 检查用户是否有权限访问指定页面
+ * @param pathname 页面路径
+ * @param accessiblePages 用户可访问的页面列表
+ * @returns 是否有权限访问
+ */
+export function canAccessPage(
+  pathname: string,
+  accessiblePages: string[] | null | undefined
+): boolean {
+  // 如果没有可访问页面列表，默认不允许访问
+  if (!accessiblePages || accessiblePages.length === 0) {
+    return false
+  }
+
+  // 只做精确匹配
+  return accessiblePages.includes(pathname)
+}

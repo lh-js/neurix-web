@@ -67,7 +67,6 @@ export default function UserPage() {
     handleUpdate,
     handleDelete,
     fetchList,
-    getRoleLabel,
     getRoleBadgeClass,
     getPageNumbers,
   } = useUserList()
@@ -160,6 +159,7 @@ export default function UserPage() {
     try {
       if (editingItem) {
         // 更新时不需要密码字段
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...updateData } = formData
         await handleUpdate(editingItem.id, updateData)
         toast.success('更新成功')
@@ -464,9 +464,7 @@ export default function UserPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确定要删除吗？</AlertDialogTitle>
-            <AlertDialogDescription>
-              此操作无法撤销。这将永久删除该用户。
-            </AlertDialogDescription>
+            <AlertDialogDescription>此操作无法撤销。这将永久删除该用户。</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>

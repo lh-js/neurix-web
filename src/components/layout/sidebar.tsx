@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { sidebarMenuConfig, MenuItem, LinkMenuItem, GroupMenuItem } from '@/config/sidebar.config'
+import { useAuth, withUser } from '@/hooks/common/use-auth'
+import { canAccessPage } from '@/utils/auth.util'
 
-export default function Sidebar() {
+function SidebarComponent() {
   const pathname = usePathname()
+  const { accessiblePages } = useAuth()
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     // 初始化时，设置 defaultOpen 为 true 的分组为打开状态
     const initial: Record<string, boolean> = {}
@@ -20,6 +23,37 @@ export default function Sidebar() {
     })
     return initial
   })
+
+  // 根据用户权限过滤菜单项
+  const filteredMenuConfig = useMemo(() => {
+    if (!accessiblePages || accessiblePages.length === 0) {
+      return []
+    }
+
+    return sidebarMenuConfig
+      .filter(item => {
+        if (item.type === 'link') {
+          // 检查链接菜单项是否有权限访问
+          return canAccessPage(item.href, accessiblePages)
+        } else {
+          // 对于分组菜单，检查是否有至少一个子菜单项有权限访问
+          const hasAccessibleChild = item.children.some(child =>
+            canAccessPage(child.href, accessiblePages)
+          )
+          return hasAccessibleChild
+        }
+      })
+      .map(item => {
+        if (item.type === 'group') {
+          // 过滤分组内的子菜单项，只保留有权限的
+          return {
+            ...item,
+            children: item.children.filter(child => canAccessPage(child.href, accessiblePages)),
+          }
+        }
+        return item
+      }) as MenuItem[]
+  }, [accessiblePages])
 
   const isActive = (href: string) => {
     if (!pathname) return false
@@ -106,10 +140,13 @@ export default function Sidebar() {
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border/40 bg-background/50 backdrop-blur-sm sticky top-16 self-start h-fit max-h-[calc(100vh-4rem)] overflow-y-auto">
       <nav className="flex-1 p-4 space-y-1">
-        {sidebarMenuConfig.map(item => (
+        {filteredMenuConfig.map(item => (
           <div key={item.id}>{renderMenuItem(item)}</div>
         ))}
       </nav>
     </aside>
   )
 }
+
+// 使用 withUser HOC 使组件响应 userStore 的变化
+export default withUser(SidebarComponent)

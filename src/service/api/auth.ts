@@ -1,5 +1,5 @@
 import { post, get } from '../request'
-import { LoginRequest, LoginResponse, UserInfo } from '../types/auth'
+import { LoginRequest, LoginResponse, UserInfo, AccessiblePagesResponse } from '../types/auth'
 
 /**
  * 登录 API
@@ -24,5 +24,13 @@ export function logout(): void {
  */
 export async function getUserInfo(): Promise<UserInfo> {
   const response = await get<UserInfo>('/auth/user-info')
+  return response
+}
+
+/**
+ * 获取可访问页面 API
+ */
+export async function getAccessiblePages(): Promise<AccessiblePagesResponse> {
+  const response = await get<AccessiblePagesResponse>('/auth/accessible-pages')
   return response
 }

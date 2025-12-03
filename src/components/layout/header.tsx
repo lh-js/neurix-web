@@ -98,23 +98,21 @@ const Header = observer(() => {
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuLabel className="text-xs text-muted-foreground">主题</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setTheme('light')}
-              >
-                明亮主题 {theme === 'light' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('light')}>
+                明亮主题{' '}
+                {theme === 'light' && (
+                  <span className="ml-auto text-xs text-primary">正在使用</span>
+                )}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setTheme('dark')}
-              >
-                暗黑主题 {theme === 'dark' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('dark')}>
+                暗黑主题{' '}
+                {theme === 'dark' && <span className="ml-auto text-xs text-primary">正在使用</span>}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => setTheme('system')}
-              >
-                跟随系统 {theme === 'system' && <span className="ml-auto text-xs text-primary">正在使用</span>}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('system')}>
+                跟随系统{' '}
+                {theme === 'system' && (
+                  <span className="ml-auto text-xs text-primary">正在使用</span>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,17 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-  getUserList,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser,
-} from '@/service/api/user'
-import {
-  User,
-  UserListResponse,
-  CreateUserRequest,
-  UpdateUserRequest,
-} from '@/service/types/user'
+import { getUserList, getUserById, createUser, updateUser, deleteUser } from '@/service/api/user'
+import { User, UserListResponse, CreateUserRequest, UpdateUserRequest } from '@/service/types/user'
 
 export function useUserList() {
   const [data, setData] = useState<UserListResponse | null>(null)
@@ -141,7 +130,7 @@ export function useUserList() {
       'bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400',
       'bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400',
     ]
-    
+
     // 使用角色ID取模来循环使用颜色
     const colorIndex = (role - 1) % colorPalette.length
     return colorPalette[colorIndex]

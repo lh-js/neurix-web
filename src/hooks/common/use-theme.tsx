@@ -15,7 +15,9 @@ const STORAGE_KEY = 'neurix-theme'
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light'
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
 }
 
 function applyTheme(theme: ThemeMode) {
@@ -36,8 +38,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null
     const initial = stored || 'system'
-    setThemeState(initial)
-    
+
+    // 使用 setTimeout 避免在 effect 中同步调用 setState
+    const timer = setTimeout(() => {
+      setThemeState(initial)
+    }, 0)
+
     // 检查内联脚本是否已经应用了主题
     const themeApplied = document.documentElement.getAttribute('data-theme-applied')
     if (themeApplied === 'true') {
@@ -45,22 +51,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const resolved = initial === 'system' ? getSystemTheme() : initial
       const isDark = resolved === 'dark'
       const hasDarkClass = document.documentElement.classList.contains('dark')
-      
+
       // 如果状态不一致，才需要应用主题
       if (isDark !== hasDarkClass) {
         applyTheme(initial)
       }
     } else {
       // 如果内联脚本没有应用，则应用主题
-    applyTheme(initial)
+      applyTheme(initial)
     }
 
     if (initial === 'system') {
       const mql = window.matchMedia('(prefers-color-scheme: dark)')
       const handler = () => applyTheme('system')
       mql.addEventListener('change', handler)
-      return () => mql.removeEventListener('change', handler)
+      return () => {
+        clearTimeout(timer)
+        mql.removeEventListener('change', handler)
+      }
     }
+
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -84,4 +95,3 @@ export function useTheme() {
   }
   return ctx
 }
-

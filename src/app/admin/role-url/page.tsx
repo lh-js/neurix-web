@@ -213,9 +213,7 @@ export default function RoleUrlPage() {
           </Label>
           <Select
             value={filterIsPublic}
-            onValueChange={value =>
-              handleIsPublicFilterChange(value as 'all' | 'true' | 'false')
-            }
+            onValueChange={value => handleIsPublicFilterChange(value as 'all' | 'true' | 'false')}
           >
             <SelectTrigger id="isPublic-filter" className="w-[120px]">
               <SelectValue placeholder="全部" />
@@ -449,9 +447,7 @@ export default function RoleUrlPage() {
                 <Label htmlFor="isPublic">是否公开</Label>
                 <Select
                   value={formData.isPublic.toString()}
-                  onValueChange={value =>
-                    setFormData({ ...formData, isPublic: value === 'true' })
-                  }
+                  onValueChange={value => setFormData({ ...formData, isPublic: value === 'true' })}
                   disabled={dialogLoading}
                 >
                   <SelectTrigger id="isPublic">

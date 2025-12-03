@@ -22,10 +22,13 @@ export function ThemedToaster() {
       mql.addEventListener('change', updateTheme)
       return () => mql.removeEventListener('change', updateTheme)
     } else {
-      setResolvedTheme(theme)
+      // 使用 setTimeout 避免在 effect 中同步调用 setState
+      const timer = setTimeout(() => {
+        setResolvedTheme(theme)
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [theme])
 
   return <Toaster theme={resolvedTheme} />
 }
-

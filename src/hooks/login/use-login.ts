@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { login } from '@/service/api/auth'
 import { setToken } from '@/utils/auth.util'
 import { DEFAULT_LOGIN_REDIRECT } from '@/config/auth.config'
-import { useAuth } from '@/hooks/common/use-auth'
 
 interface LoginFormData {
   email: string
@@ -12,8 +10,6 @@ interface LoginFormData {
 }
 
 export function useLogin() {
-  const router = useRouter()
-  const { refreshUserInfo } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -40,11 +36,12 @@ export function useLogin() {
         }
       }
 
-      // 获取用户信息
-      await refreshUserInfo()
       // 跳转到默认页面
-      router.push(DEFAULT_LOGIN_REDIRECT)
-      router.refresh()
+      // 使用 window.location.href 强制刷新页面，页面刷新后会自动获取用户信息和可访问页面
+      // 这样避免重复调用接口
+      if (typeof window !== 'undefined') {
+        window.location.href = DEFAULT_LOGIN_REDIRECT
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '登录失败，请检查邮箱和密码'
       setError(errorMessage)

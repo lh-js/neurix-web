@@ -5,6 +5,9 @@ class UserStore {
   user: UserInfo | null = null
   loading = false
   initialized = false
+  accessiblePages: string[] = []
+  pagesLoading = false
+  pagesInitialized = false
 
   constructor() {
     makeAutoObservable(this)
