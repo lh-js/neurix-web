@@ -1,4 +1,12 @@
 /**
+ * 接口权限项
+ */
+export interface AccessibleApi {
+  url: string
+  method: string[]
+}
+
+/**
  * 角色/权限
  */
 export interface Role {
@@ -7,7 +15,7 @@ export interface Role {
   description: string
   level: number
   accessiblePages: string[] | null
-  accessibleApis: string[] | null
+  accessibleApis: AccessibleApi[] | null
   createTime: string
 }
 
@@ -19,7 +27,7 @@ export interface CreateRoleRequest {
   description: string
   level: number
   accessiblePages: string[]
-  accessibleApis: string[]
+  accessibleApis: AccessibleApi[]
 }
 
 /**
@@ -30,7 +38,7 @@ export interface UpdateRoleRequest {
   description?: string
   level?: number
   accessiblePages?: string[]
-  accessibleApis?: string[]
+  accessibleApis?: AccessibleApi[]
 }
 
 /**

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Role, CreateRoleRequest } from '@/service/types/role'
+import type { Role, CreateRoleRequest } from '@/service/types/role'
 import { useRole } from '@/hooks/admin/role/use-role'
 import { getAllRolePages } from '@/service/api/role-page'
 import { getAllRoleApis } from '@/service/api/role-api'
@@ -146,7 +146,7 @@ export default function RolePage() {
       description: '',
       level: 0,
       accessiblePages: [...publicPages],
-      accessibleApis: [],
+      accessibleApis: [], // AccessibleApi[] 格式
     })
     setIsDialogOpen(true)
   }
@@ -156,6 +156,29 @@ export default function RolePage() {
     setDialogLoading(true)
     setIsDialogOpen(true)
 
+    // 处理 accessibleApis：如果是旧格式（string[]），转换为新格式
+    const convertAccessibleApis = (
+      apis: Role['accessibleApis']
+    ): CreateRoleRequest['accessibleApis'] => {
+      if (!apis || apis.length === 0) return []
+      // 检查第一个元素是否是字符串（旧格式）
+      if (typeof apis[0] === 'string') {
+        // 旧格式：string[]，需要转换为新格式
+        const oldApis = apis as unknown as string[]
+        return oldApis.map(url => {
+          // 查找对应的 API 定义，获取默认的 method
+          const apiDef = roleApis.find(api => api.url === url)
+          return {
+            url,
+            method: apiDef?.method || [],
+          }
+        })
+      } else {
+        // 新格式：AccessibleApi[]
+        return apis as CreateRoleRequest['accessibleApis']
+      }
+    }
+
     try {
       // 通过接口获取最新的数据
       const role = await fetchRoleById(item.id)
@@ -164,7 +187,7 @@ export default function RolePage() {
         description: role.description,
         level: role.level,
         accessiblePages: role.accessiblePages || [],
-        accessibleApis: role.accessibleApis || [],
+        accessibleApis: convertAccessibleApis(role.accessibleApis),
       })
       setEditingItem(role)
     } catch {
@@ -174,7 +197,7 @@ export default function RolePage() {
         description: item.description,
         level: item.level,
         accessiblePages: item.accessiblePages || [],
-        accessibleApis: item.accessibleApis || [],
+        accessibleApis: convertAccessibleApis(item.accessibleApis),
       })
       toast.error('获取详情失败，使用列表数据')
     } finally {
@@ -245,13 +268,69 @@ export default function RolePage() {
     })
   }
 
-  // 切换接口权限
+  // 切换接口权限（添加或移除整个接口）
   const toggleApiUrl = (url: string) => {
     setFormData(prev => {
-      const apis = prev.accessibleApis.includes(url)
-        ? prev.accessibleApis.filter(u => u !== url)
-        : [...prev.accessibleApis, url]
-      return { ...prev, accessibleApis: apis }
+      const existingIndex = prev.accessibleApis.findIndex(api => api.url === url)
+      if (existingIndex >= 0) {
+        // 如果已存在，移除
+        return {
+          ...prev,
+          accessibleApis: prev.accessibleApis.filter(api => api.url !== url),
+        }
+      } else {
+        // 如果不存在，添加（使用接口定义中的默认 method）
+        const apiDef = roleApis.find(api => api.url === url)
+        return {
+          ...prev,
+          accessibleApis: [
+            ...prev.accessibleApis,
+            {
+              url,
+              method: apiDef?.method || [],
+            },
+          ],
+        }
+      }
+    })
+  }
+
+  // 切换接口的某个 method
+  const toggleApiMethod = (url: string, method: string) => {
+    setFormData(prev => {
+      const existingIndex = prev.accessibleApis.findIndex(api => api.url === url)
+      if (existingIndex >= 0) {
+        // 如果接口已存在，更新 method
+        const api = prev.accessibleApis[existingIndex]
+        const newMethods = api.method.includes(method)
+          ? api.method.filter(m => m !== method)
+          : [...api.method, method]
+        
+        // 如果所有 method 都被移除了，移除整个接口
+        if (newMethods.length === 0) {
+          return {
+            ...prev,
+            accessibleApis: prev.accessibleApis.filter(api => api.url !== url),
+          }
+        }
+        
+        // 更新 method
+        const newApis = [...prev.accessibleApis]
+        newApis[existingIndex] = { ...api, method: newMethods }
+        return { ...prev, accessibleApis: newApis }
+      } else {
+        // 如果接口不存在，添加接口和 method
+        return {
+          ...prev,
+          accessibleApis: [
+            ...prev.accessibleApis,
+            {
+              url,
+              method: [method],
+            },
+          ],
+        }
+      }
     })
   }
 
@@ -284,10 +363,24 @@ export default function RolePage() {
   const toggleAllApis = () => {
     setFormData(prev => {
       const allApiUrls = roleApis.map(api => api.url)
-      const allSelected = allApiUrls.every(url => prev.accessibleApis.includes(url))
-      return {
-        ...prev,
-        accessibleApis: allSelected ? [] : allApiUrls,
+      const allSelected = allApiUrls.every(url =>
+        prev.accessibleApis.some(api => api.url === url)
+      )
+      if (allSelected) {
+        // 取消全选：移除所有接口
+        return {
+          ...prev,
+          accessibleApis: [],
+        }
+      } else {
+        // 全选：添加所有接口，使用接口定义中的 method
+        return {
+          ...prev,
+          accessibleApis: roleApis.map(api => ({
+            url: api.url,
+            method: api.method || [],
+          })),
+        }
       }
     })
   }
@@ -603,45 +696,78 @@ export default function RolePage() {
                       disabled={dialogLoading}
                       className="h-7 text-xs"
                     >
-                      {roleApis.every(api => formData.accessibleApis.includes(api.url))
+                      {roleApis.every(api =>
+                        formData.accessibleApis.some(a => a.url === api.url)
+                      )
                         ? '取消全选'
                         : '全选'}
                     </Button>
                   )}
                 </div>
-                <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
+                <div className="border rounded-md p-4 max-h-96 overflow-y-auto space-y-4">
                   {permissionsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-8 w-full" />
                       <Skeleton className="h-8 w-full" />
                     </div>
                   ) : roleApis.length > 0 ? (
-                    roleApis.map(api => (
-                      <div key={api.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`api-${api.id}`}
-                          checked={formData.accessibleApis.includes(api.url)}
-                          onCheckedChange={() => toggleApiUrl(api.url)}
-                          disabled={dialogLoading}
-                        />
-                        <Label
-                          htmlFor={`api-${api.id}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          <div>
-                            <div className="font-medium">{api.url}</div>
-                            {api.description && (
-                              <div className="text-xs text-muted-foreground">{api.description}</div>
-                            )}
-                            {api.method && api.method.length > 0 && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                方法: {api.method.join(', ')}
+                    roleApis.map(api => {
+                      const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
+                      const isApiSelected = !!selectedApi
+                      const availableMethods = api.method || []
+                      
+                      return (
+                        <div key={api.id} className="space-y-2 border-b last:border-b-0 pb-3 last:pb-0">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`api-${api.id}`}
+                              checked={isApiSelected}
+                              onCheckedChange={() => toggleApiUrl(api.url)}
+                              disabled={dialogLoading}
+                            />
+                            <Label
+                              htmlFor={`api-${api.id}`}
+                              className="text-sm font-normal cursor-pointer flex-1"
+                            >
+                              <div>
+                                <div className="font-medium">{api.url}</div>
+                                {api.description && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {api.description}
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </Label>
                           </div>
-                        </Label>
-                      </div>
-                    ))
+                          {isApiSelected && availableMethods.length > 0 && (
+                            <div className="pl-6 space-y-2">
+                              <div className="text-xs text-muted-foreground">选择 HTTP 方法：</div>
+                              <div className="flex flex-wrap gap-2">
+                                {availableMethods.map(method => {
+                                  const isMethodSelected = selectedApi?.method.includes(method) || false
+                                  return (
+                                    <div key={method} className="flex items-center space-x-1">
+                                      <Checkbox
+                                        id={`api-${api.id}-method-${method}`}
+                                        checked={isMethodSelected}
+                                        onCheckedChange={() => toggleApiMethod(api.url, method)}
+                                        disabled={dialogLoading}
+                                      />
+                                      <Label
+                                        htmlFor={`api-${api.id}-method-${method}`}
+                                        className="text-xs font-normal cursor-pointer"
+                                      >
+                                        {method}
+                                      </Label>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
                   ) : (
                     <p className="text-sm text-muted-foreground">暂无接口权限</p>
                   )}
