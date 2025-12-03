@@ -500,8 +500,8 @@ export default function RolePage() {
                           ? '取消全选'
                           : '全选'
                         : pageUrls
-                            .filter(url => !url.isPublic)
-                            .every(url => formData.accessiblePages.includes(url.url))
+                              .filter(url => !url.isPublic)
+                              .every(url => formData.accessiblePages.includes(url.url))
                           ? '取消全选'
                           : '全选'}
                     </Button>
@@ -541,7 +541,9 @@ export default function RolePage() {
                                 )}
                               </div>
                               {url.description && (
-                                <div className="text-xs text-muted-foreground">{url.description}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {url.description}
+                                </div>
                               )}
                             </div>
                           </Label>

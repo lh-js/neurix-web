@@ -32,12 +32,6 @@ export default function Footer() {
                   首页
                 </Link>
                 <Link
-                  href="/home"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
-                >
-                  主页
-                </Link>
-                <Link
                   href="/login"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit"
                 >

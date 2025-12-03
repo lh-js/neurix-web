@@ -63,19 +63,6 @@ const Header = observer(() => {
                 <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
               )}
             </Link>
-            <Link
-              href="/home"
-              className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${
-                isActive('/home')
-                  ? 'text-foreground bg-accent'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              }`}
-            >
-              主页
-              {isActive('/home') && (
-                <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-              )}
-            </Link>
           </nav>
         </div>
         <div className="flex items-center space-x-3">
