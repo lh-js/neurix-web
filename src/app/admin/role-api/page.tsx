@@ -1,571 +1,222 @@
 'use client'
 
-import { useState } from 'react'
-import { RoleApi, CreateRoleApiRequest } from '@/service/types/role-api'
 import { useRoleApi } from '@/hooks/admin/role-api/use-role-api'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { useRoleApiForm } from '@/hooks/admin/role-api/use-role-api-form'
+import { useDeleteDialog } from '@/hooks/common/use-delete-dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@/components/ui/pagination'
+import { Label } from '@/components/ui/label'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
-import { toast } from 'sonner'
-import { Spinner } from '@/components/ui/spinner'
-
-const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
+import { PageHeader } from '@/components/common/page-header'
+import { DataTable } from '@/components/common/data-table'
+import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
+import { RoleApiFormDialog } from '@/components/admin/role-api/role-api-form-dialog'
+import { BooleanFilter } from '@/components/common/boolean-filter'
 
 export default function RoleApiPage() {
   const {
     data,
     loading,
     error,
-    page,
     handlePageChange,
     handleCreate,
     handleUpdate,
     handleDelete,
     fetchRoleApiById,
     fetchList,
-    getPageNumbers,
     filterIsPublic,
     handleIsPublicFilterChange,
   } = useRoleApi()
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [editingItem, setEditingItem] = useState<RoleApi | null>(null)
-  const [formData, setFormData] = useState<CreateRoleApiRequest>({
-    url: '',
-    description: '',
-    method: [],
-    isPublic: false,
+  const {
+    isDialogOpen,
+    setIsDialogOpen,
+    editingItem,
+    formData,
+    setFormData,
+    dialogLoading,
+    submitting,
+    openCreateDialog,
+    openEditDialog,
+    handleSubmit,
+    toggleMethod,
+    toggleAllMethods,
+    HTTP_METHODS,
+  } = useRoleApiForm({
+    fetchRoleApiById,
+    handleCreate,
+    handleUpdate,
   })
-  const [dialogLoading, setDialogLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
 
-  const openCreateDialog = () => {
-    setEditingItem(null)
-    setFormData({
-      url: '',
-      description: '',
-      method: [],
-      isPublic: false,
-    })
-    setIsDialogOpen(true)
-  }
-
-  const openEditDialog = async (item: RoleApi) => {
-    setEditingItem(item)
-    setDialogLoading(true)
-    setIsDialogOpen(true)
-
-    try {
-      // 通过接口获取最新的数据
-      const roleApi = await fetchRoleApiById(item.id)
-      setFormData({
-        url: roleApi.url,
-        description: roleApi.description,
-        method: roleApi.method || [],
-        isPublic: roleApi.isPublic,
-      })
-      setEditingItem(roleApi)
-    } catch {
-      // 如果获取失败，使用列表中的数据
-      setFormData({
-        url: item.url,
-        description: item.description,
-        method: item.method || [],
-        isPublic: item.isPublic,
-      })
-      toast.error('获取详情失败，使用列表数据')
-    } finally {
-      setDialogLoading(false)
-    }
-  }
-
-  const handleSubmit = async () => {
-    if (submitting) return
-
-    // 验证至少选择一个 HTTP 方法
-    if (formData.method.length === 0) {
-      toast.error('请至少选择一个 HTTP 方法')
-      return
-    }
-
-    try {
-      setSubmitting(true)
-      if (editingItem) {
-        await handleUpdate(editingItem.id, formData)
-        toast.success('更新成功')
-      } else {
-        await handleCreate(formData)
-        toast.success('创建成功')
-      }
-      setIsDialogOpen(false)
-    } catch {
-      // 错误已在 hook 中处理
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleDeleteClick = (id: number) => {
-    setDeletingId(id)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const confirmDelete = async () => {
-    if (deletingId === null || deleting) return
-
-    try {
-      setDeleting(true)
-      await handleDelete(deletingId)
-      toast.success('删除成功')
-      setDeletingId(null)
-      setIsDeleteDialogOpen(false)
-    } catch {
-      // 错误已在 hook 中处理
-      // 删除失败时保持对话框打开，让用户可以看到错误信息
-    } finally {
-      setDeleting(false)
-    }
-  }
-
-  const toggleMethod = (method: string) => {
-    setFormData(prev => {
-      const methods = prev.method.includes(method)
-        ? prev.method.filter(m => m !== method)
-        : [...prev.method, method]
-      return { ...prev, method: methods }
-    })
-  }
-
-  const toggleAllMethods = () => {
-    setFormData(prev => {
-      const allSelected = HTTP_METHODS.every(method => prev.method.includes(method))
-      return {
-        ...prev,
-        method: allSelected ? [] : [...HTTP_METHODS],
-      }
-    })
-  }
+  const {
+    isDeleteDialogOpen,
+    deleting,
+    handleDeleteClick,
+    confirmDelete,
+    handleCancel,
+    handleOpenChange,
+  } = useDeleteDialog({
+    onDelete: handleDelete,
+    successMessage: '删除成功',
+  })
 
   return (
     <div className="space-y-6">
-      {/* 页面标题 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Shield className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">接口权限管理</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={fetchList} variant="outline" disabled={loading}>
-            <Search className="h-4 w-4 mr-2" />
-            查询
-          </Button>
-          <Button onClick={openCreateDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            新增
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Shield}
+        title="接口权限管理"
+        actions={
+          <>
+            <Button onClick={fetchList} variant="outline" disabled={loading}>
+              <Search className="h-4 w-4 mr-2" />
+              查询
+            </Button>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              新增
+            </Button>
+          </>
+        }
+      />
 
       {/* 筛选区域 */}
       <div className="flex items-center gap-4">
-        {/* 是否公开筛选 */}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="isPublic-filter" className="text-sm whitespace-nowrap">
-            是否公开：
-          </Label>
-          <Select
-            value={filterIsPublic}
-            onValueChange={value => handleIsPublicFilterChange(value as 'all' | 'true' | 'false')}
-          >
-            <SelectTrigger id="isPublic-filter" className="w-[120px]">
-              <SelectValue placeholder="全部" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部</SelectItem>
-              <SelectItem value="true">是</SelectItem>
-              <SelectItem value="false">否</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <BooleanFilter
+          label="是否公开："
+          value={filterIsPublic}
+          onChange={handleIsPublicFilterChange}
+        />
       </div>
 
-      {/* 错误提示 */}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* 数据表格 */}
-      <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-6 space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        ) : data && data.list.length > 0 ? (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead>描述</TableHead>
-                  <TableHead>HTTP 方法</TableHead>
-                  <TableHead>是否公开</TableHead>
-                  <TableHead>创建时间</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.list.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell className="text-muted-foreground">{item.id}</TableCell>
-                    <TableCell className="font-medium">{item.url}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {item.method && item.method.length > 0 ? (
-                          item.method.map(method => (
-                            <span
-                              key={method}
-                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                            >
-                              {method}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          item.isPublic
-                            ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                            : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
-                        }`}
-                      >
-                        {item.isPublic ? '是' : '否'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(item.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* 分页控件 */}
-            <div className="flex items-center justify-between border-t px-6 py-4 gap-4 min-w-0">
-              <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
-                共 {data.total} 条记录，第 {data.page} / {data.totalPages} 页
+      <DataTable
+        columns={[
+          {
+            key: 'id',
+            header: 'ID',
+            render: item => <span className="text-muted-foreground">{item.id}</span>,
+          },
+          {
+            key: 'url',
+            header: 'URL',
+            render: item => <span className="font-medium">{item.url}</span>,
+          },
+          {
+            key: 'description',
+            header: '描述',
+            render: item => item.description,
+          },
+          {
+            key: 'method',
+            header: 'HTTP 方法',
+            render: item => (
+              <div className="flex flex-wrap gap-1">
+                {item.method && item.method.length > 0 ? (
+                  item.method.map(method => (
+                    <span
+                      key={method}
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                    >
+                      {method}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
               </div>
-              <div className="flex-shrink-0">
-                <Pagination className="w-auto mx-0">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        href="#"
-                        onClick={e => {
-                          e.preventDefault()
-                          if (data.hasPreviousPage && !loading) {
-                            handlePageChange(page - 1)
-                          }
-                        }}
-                        className={
-                          !data.hasPreviousPage || loading
-                            ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
-                      />
-                    </PaginationItem>
-                    {getPageNumbers().map((pageItem, index) => {
-                      if (pageItem === 'ellipsis') {
-                        return (
-                          <PaginationItem key={`ellipsis-${index}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )
-                      }
-
-                      const pageNumber = pageItem
-                      return (
-                        <PaginationItem key={pageNumber}>
-                          <PaginationLink
-                            href="#"
-                            onClick={e => {
-                              e.preventDefault()
-                              if (!loading) {
-                                handlePageChange(pageNumber)
-                              }
-                            }}
-                            isActive={pageNumber === page}
-                            className={
-                              loading ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                            }
-                          >
-                            {pageNumber}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        href="#"
-                        onClick={e => {
-                          e.preventDefault()
-                          if (data.hasNextPage && !loading) {
-                            handlePageChange(page + 1)
-                          }
-                        }}
-                        className={
-                          !data.hasNextPage || loading
-                            ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="p-12 text-center">
-            <Shield className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 text-sm text-muted-foreground">暂无数据</p>
-          </div>
-        )}
-      </div>
-
-      {/* 新增/编辑对话框 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingItem ? '编辑接口权限' : '新增接口权限'}</DialogTitle>
-            <DialogDescription>
-              {editingItem ? '修改接口权限信息' : '创建一个新的接口权限'}
-            </DialogDescription>
-          </DialogHeader>
-          {dialogLoading ? (
-            <div className="space-y-4 py-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="url">URL</Label>
-                <Input
-                  id="url"
-                  value={formData.url}
-                  onChange={e => setFormData({ ...formData, url: e.target.value })}
-                  placeholder="请输入URL"
-                  disabled={dialogLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">描述</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="请输入描述"
-                  disabled={dialogLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="method">HTTP 方法</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleAllMethods}
-                    disabled={dialogLoading}
-                  >
-                    {HTTP_METHODS.every(method => formData.method.includes(method))
-                      ? '取消全选'
-                      : '全选'}
-                  </Button>
-                </div>
-                <div className="border rounded-md p-4 space-y-2">
-                  {HTTP_METHODS.map(method => (
-                    <div key={method} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`method-${method}`}
-                        checked={formData.method.includes(method)}
-                        onCheckedChange={() => toggleMethod(method)}
-                        disabled={dialogLoading}
-                      />
-                      <Label
-                        htmlFor={`method-${method}`}
-                        className="text-sm font-normal cursor-pointer"
-                      >
-                        {method}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="isPublic">是否公开</Label>
-                <Select
-                  value={formData.isPublic.toString()}
-                  onValueChange={value => setFormData({ ...formData, isPublic: value === 'true' })}
-                  disabled={dialogLoading}
+            ),
+          },
+          {
+            key: 'isPublic',
+            header: '是否公开',
+            render: item => (
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  item.isPublic
+                    ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+                    : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+                }`}
+              >
+                {item.isPublic ? '是' : '否'}
+              </span>
+            ),
+          },
+          {
+            key: 'createTime',
+            header: '创建时间',
+            render: item => (
+              <span className="text-sm text-muted-foreground">
+                {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+              </span>
+            ),
+          },
+          {
+            key: 'actions',
+            header: '操作',
+            className: 'text-right',
+            render: item => (
+              <div className="flex items-center justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteClick(item.id)}
+                  className="text-destructive hover:text-destructive"
                 >
-                  <SelectTrigger id="isPublic">
-                    <SelectValue placeholder="请选择是否公开" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">是</SelectItem>
-                    <SelectItem value="false">否</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={submitting || dialogLoading}
-            >
-              取消
-            </Button>
-            <Button onClick={handleSubmit} disabled={submitting || dialogLoading}>
-              {submitting ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  处理中...
-                </>
-              ) : editingItem ? (
-                '更新'
-              ) : (
-                '创建'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            ),
+          },
+        ]}
+        data={data?.list || []}
+        loading={loading}
+        pagination={
+          data
+            ? {
+                total: data.total,
+                page: parseInt(data.page),
+                totalPages: data.totalPages,
+                hasPreviousPage: data.hasPreviousPage,
+                hasNextPage: data.hasNextPage,
+              }
+            : undefined
+        }
+        onPageChange={handlePageChange}
+        emptyMessage="暂无数据"
+        emptyIcon={<Shield className="mx-auto h-12 w-12 text-muted-foreground/50" />}
+      />
 
-      {/* 删除确认对话框 */}
-      <AlertDialog
+      <RoleApiFormDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        editing={!!editingItem}
+        formData={formData}
+        onFormDataChange={setFormData}
+        onSubmit={handleSubmit}
+        loading={dialogLoading}
+        submitting={submitting}
+        onToggleMethod={toggleMethod}
+        onToggleAllMethods={toggleAllMethods}
+        httpMethods={HTTP_METHODS}
+      />
+
+      <DeleteConfirmDialog
         open={isDeleteDialogOpen}
-        onOpenChange={open => {
-          // 删除过程中不允许关闭对话框
-          if (!open && deleting) {
-            return
-          }
-          setIsDeleteDialogOpen(open)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
-            <AlertDialogDescription>
-              确定要删除这条接口权限记录吗？此操作无法撤销。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingId(null)} disabled={deleting}>
-              取消
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async e => {
-                // 阻止 AlertDialogAction 的默认关闭行为
-                e.preventDefault()
-                // 如果正在删除，直接返回
-                if (deleting) {
-                  return
-                }
-                await confirmDelete()
-              }}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  删除中...
-                </>
-              ) : (
-                '删除'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={handleOpenChange}
+        title="确认删除"
+        description="确定要删除这条接口权限记录吗？此操作无法撤销。"
+        deleting={deleting}
+        onConfirm={confirmDelete}
+        onCancel={handleCancel}
+      />
     </div>
   )
 }
