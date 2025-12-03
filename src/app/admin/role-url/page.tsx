@@ -92,10 +92,17 @@ export default function RoleUrlPage() {
 
   const openCreateDialog = () => {
     setEditingItem(null)
+    // 根据当前选中的 tab 设置默认类型
+    let defaultType: RoleUrlType = 0 // 默认为页面
+    if (filterType === 'page') {
+      defaultType = 0 // 页面
+    } else if (filterType === 'api') {
+      defaultType = 1 // 接口
+    }
     setFormData({
       url: '',
       description: '',
-      type: 0,
+      type: defaultType,
       isPublic: false,
     })
     setIsDialogOpen(true)
