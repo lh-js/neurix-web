@@ -108,14 +108,17 @@ export default function RolePage() {
   const pageUrls = roleUrls.filter(url => url.type === 0)
   // 获取接口类型的URL
   const apiUrls = roleUrls.filter(url => url.type === 1)
+  // 获取公共页面
+  const publicPages = pageUrls.filter(url => url.isPublic).map(url => url.url)
 
   const openCreateDialog = () => {
     setEditingItem(null)
+    // 新增时，公共页面默认选中
     setFormData({
       name: '',
       description: '',
       level: 0,
-      accessiblePages: [],
+      accessiblePages: [...publicPages],
       accessibleApis: [],
     })
     setIsDialogOpen(true)
@@ -154,11 +157,18 @@ export default function RolePage() {
 
   const handleSubmit = async () => {
     try {
+      // 新增时，确保公共页面始终在提交的数据中
+      const submitData = editingItem
+        ? formData
+        : {
+            ...formData,
+            accessiblePages: [...new Set([...publicPages, ...formData.accessiblePages])],
+          }
       if (editingItem) {
-        await handleUpdate(editingItem.id, formData)
+        await handleUpdate(editingItem.id, submitData)
         toast.success('更新成功')
       } else {
-        await handleCreate(formData)
+        await handleCreate(submitData)
         toast.success('创建成功')
       }
       setIsDialogOpen(false)
@@ -187,6 +197,10 @@ export default function RolePage() {
 
   // 切换页面权限
   const togglePageUrl = (url: string) => {
+    // 新增时，公共页面不允许取消选择
+    if (!editingItem && publicPages.includes(url)) {
+      return
+    }
     setFormData(prev => {
       const pages = prev.accessiblePages.includes(url)
         ? prev.accessiblePages.filter(u => u !== url)
@@ -202,6 +216,43 @@ export default function RolePage() {
         ? prev.accessibleApis.filter(u => u !== url)
         : [...prev.accessibleApis, url]
       return { ...prev, accessibleApis: apis }
+    })
+  }
+
+  // 全选/取消全选页面权限
+  const toggleAllPages = () => {
+    setFormData(prev => {
+      const allPageUrls = pageUrls.map(url => url.url)
+      if (!editingItem) {
+        // 新增时：全选时包含公共页面，取消全选时只取消非公共页面
+        const nonPublicPages = allPageUrls.filter(url => !publicPages.includes(url))
+        const allNonPublicSelected = nonPublicPages.every(url => prev.accessiblePages.includes(url))
+        return {
+          ...prev,
+          accessiblePages: allNonPublicSelected
+            ? [...publicPages] // 取消全选：只保留公共页面
+            : [...publicPages, ...nonPublicPages], // 全选：公共页面 + 所有非公共页面
+        }
+      } else {
+        // 编辑时：正常全选/取消全选
+        const allSelected = allPageUrls.every(url => prev.accessiblePages.includes(url))
+        return {
+          ...prev,
+          accessiblePages: allSelected ? [] : allPageUrls,
+        }
+      }
+    })
+  }
+
+  // 全选/取消全选接口权限
+  const toggleAllApis = () => {
+    setFormData(prev => {
+      const allApiUrls = apiUrls.map(url => url.url)
+      const allSelected = allApiUrls.every(url => prev.accessibleApis.includes(url))
+      return {
+        ...prev,
+        accessibleApis: allSelected ? [] : allApiUrls,
+      }
     })
   }
 
@@ -433,7 +484,29 @@ export default function RolePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>可访问页面</Label>
+                <div className="flex items-center justify-between">
+                  <Label>可访问页面</Label>
+                  {!roleUrlsLoading && pageUrls.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleAllPages}
+                      disabled={dialogLoading}
+                      className="h-7 text-xs"
+                    >
+                      {editingItem
+                        ? pageUrls.every(url => formData.accessiblePages.includes(url.url))
+                          ? '取消全选'
+                          : '全选'
+                        : pageUrls
+                            .filter(url => !url.isPublic)
+                            .every(url => formData.accessiblePages.includes(url.url))
+                          ? '取消全选'
+                          : '全选'}
+                    </Button>
+                  )}
+                </div>
                 <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
                   {roleUrlsLoading ? (
                     <div className="space-y-2">
@@ -441,34 +514,63 @@ export default function RolePage() {
                       <Skeleton className="h-8 w-full" />
                     </div>
                   ) : pageUrls.length > 0 ? (
-                    pageUrls.map(url => (
-                      <div key={url.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`page-${url.id}`}
-                          checked={formData.accessiblePages.includes(url.url)}
-                          onCheckedChange={() => togglePageUrl(url.url)}
-                          disabled={dialogLoading}
-                        />
-                        <Label
-                          htmlFor={`page-${url.id}`}
-                          className="text-sm font-normal cursor-pointer flex-1"
-                        >
-                          <div>
-                            <div className="font-medium">{url.url}</div>
-                            {url.description && (
-                              <div className="text-xs text-muted-foreground">{url.description}</div>
-                            )}
-                          </div>
-                        </Label>
-                      </div>
-                    ))
+                    pageUrls.map(url => {
+                      const isPublic = url.isPublic
+                      const isChecked = formData.accessiblePages.includes(url.url)
+                      // 新增时，公共页面禁用；编辑时，公共页面不禁用
+                      const isDisabled = dialogLoading || (!editingItem && isPublic)
+                      return (
+                        <div key={url.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`page-${url.id}`}
+                            checked={isChecked}
+                            onCheckedChange={() => togglePageUrl(url.url)}
+                            disabled={isDisabled}
+                          />
+                          <Label
+                            htmlFor={`page-${url.id}`}
+                            className={`text-sm font-normal flex-1 ${
+                              isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {url.url}
+                                {isPublic && (
+                                  <span className="text-xs text-muted-foreground">(公共页面)</span>
+                                )}
+                              </div>
+                              {url.description && (
+                                <div className="text-xs text-muted-foreground">{url.description}</div>
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                      )
+                    })
                   ) : (
                     <p className="text-sm text-muted-foreground">暂无页面权限</p>
                   )}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>可访问接口</Label>
+                <div className="flex items-center justify-between">
+                  <Label>可访问接口</Label>
+                  {!roleUrlsLoading && apiUrls.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleAllApis}
+                      disabled={dialogLoading}
+                      className="h-7 text-xs"
+                    >
+                      {apiUrls.every(url => formData.accessibleApis.includes(url.url))
+                        ? '取消全选'
+                        : '全选'}
+                    </Button>
+                  )}
+                </div>
                 <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
                   {roleUrlsLoading ? (
                     <div className="space-y-2">
