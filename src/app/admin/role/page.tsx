@@ -136,17 +136,24 @@ export default function RolePage() {
 
   // 获取公共页面
   const publicPages = rolePages.filter(page => page.isPublic).map(page => page.url)
+  // 获取公共接口（包含所有 method）
+  const publicApis = roleApis
+    .filter(api => api.isPublic)
+    .map(api => ({
+      url: api.url,
+      method: api.method || [],
+    }))
   const permissionsLoading = rolePagesLoading || roleApisLoading
 
   const openCreateDialog = () => {
     setEditingItem(null)
-    // 新增时，公共页面默认选中
+    // 新增时，公共页面和公共接口默认选中
     setFormData({
       name: '',
       description: '',
       level: 0,
       accessiblePages: [...publicPages],
-      accessibleApis: [], // AccessibleApi[] 格式
+      accessibleApis: [...publicApis], // 默认选中所有公共接口（包含所有 method）
     })
     setIsDialogOpen(true)
   }
@@ -210,12 +217,19 @@ export default function RolePage() {
 
     try {
       setSubmitting(true)
-      // 新增时，确保公共页面始终在提交的数据中
+      // 新增时，确保公共页面和公共接口始终在提交的数据中
       const submitData = editingItem
         ? formData
         : {
             ...formData,
             accessiblePages: [...new Set([...publicPages, ...formData.accessiblePages])],
+            // 合并公共接口，确保公共接口的所有 method 都在
+            accessibleApis: [
+              ...publicApis,
+              ...formData.accessibleApis.filter(
+                api => !publicApis.some(publicApi => publicApi.url === api.url)
+              ),
+            ],
           }
       if (editingItem) {
         await handleUpdate(editingItem.id, submitData)
@@ -270,6 +284,10 @@ export default function RolePage() {
 
   // 切换接口权限（添加或移除整个接口）
   const toggleApiUrl = (url: string) => {
+    // 在新增模式下，公共接口不允许取消选择
+    if (!editingItem && publicApis.some(api => api.url === url)) {
+      return
+    }
     setFormData(prev => {
       const existingIndex = prev.accessibleApis.findIndex(api => api.url === url)
       if (existingIndex >= 0) {
@@ -297,6 +315,13 @@ export default function RolePage() {
 
   // 切换接口的某个 method
   const toggleApiMethod = (url: string, method: string) => {
+    // 在新增模式下，公共接口的 method 不允许取消选择
+    if (!editingItem) {
+      const publicApi = publicApis.find(api => api.url === url)
+      if (publicApi && publicApi.method.includes(method)) {
+        return
+      }
+    }
     setFormData(prev => {
       const existingIndex = prev.accessibleApis.findIndex(api => api.url === url)
       if (existingIndex >= 0) {
@@ -305,7 +330,7 @@ export default function RolePage() {
         const newMethods = api.method.includes(method)
           ? api.method.filter(m => m !== method)
           : [...api.method, method]
-        
+
         // 如果所有 method 都被移除了，移除整个接口
         if (newMethods.length === 0) {
           return {
@@ -313,7 +338,7 @@ export default function RolePage() {
             accessibleApis: prev.accessibleApis.filter(api => api.url !== url),
           }
         }
-        
+
         // 更新 method
         const newApis = [...prev.accessibleApis]
         newApis[existingIndex] = { ...api, method: newMethods }
@@ -724,22 +749,37 @@ export default function RolePage() {
                       const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
                       const isApiSelected = !!selectedApi
                       const availableMethods = api.method || []
-                      
+                      const isPublic = api.isPublic
+                      // 新增时，公共接口禁用；编辑时，公共接口不禁用
+                      const isApiDisabled = dialogLoading || (!editingItem && isPublic)
+
                       return (
-                        <div key={api.id} className="space-y-2 border-b last:border-b-0 pb-3 last:pb-0">
+                        <div
+                          key={api.id}
+                          className="space-y-2 border-b last:border-b-0 pb-3 last:pb-0"
+                        >
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id={`api-${api.id}`}
                               checked={isApiSelected}
                               onCheckedChange={() => toggleApiUrl(api.url)}
-                              disabled={dialogLoading}
+                              disabled={isApiDisabled}
                             />
                             <Label
                               htmlFor={`api-${api.id}`}
-                              className="text-sm font-normal cursor-pointer flex-1"
+                              className={`text-sm font-normal flex-1 ${
+                                isApiDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                              }`}
                             >
                               <div>
-                                <div className="font-medium">{api.url}</div>
+                                <div className="font-medium flex items-center gap-2">
+                                  {api.url}
+                                  {isPublic && (
+                                    <span className="text-xs text-muted-foreground">
+                                      (公共接口)
+                                    </span>
+                                  )}
+                                </div>
                                 {api.description && (
                                   <div className="text-xs text-muted-foreground">
                                     {api.description}
@@ -753,18 +793,31 @@ export default function RolePage() {
                               <div className="text-xs text-muted-foreground">选择 HTTP 方法：</div>
                               <div className="flex flex-wrap gap-2">
                                 {availableMethods.map(method => {
-                                  const isMethodSelected = selectedApi?.method.includes(method) || false
+                                  const isMethodSelected =
+                                    selectedApi?.method.includes(method) || false
+                                  // 新增时，公共接口的 method 禁用；编辑时，公共接口的 method 不禁用
+                                  const isMethodDisabled =
+                                    dialogLoading ||
+                                    (!editingItem &&
+                                      isPublic &&
+                                      publicApis.some(
+                                        pa => pa.url === api.url && pa.method.includes(method)
+                                      ))
                                   return (
                                     <div key={method} className="flex items-center space-x-1">
                                       <Checkbox
                                         id={`api-${api.id}-method-${method}`}
                                         checked={isMethodSelected}
                                         onCheckedChange={() => toggleApiMethod(api.url, method)}
-                                        disabled={dialogLoading}
+                                        disabled={isMethodDisabled}
                                       />
                                       <Label
                                         htmlFor={`api-${api.id}-method-${method}`}
-                                        className="text-xs font-normal cursor-pointer"
+                                        className={`text-xs font-normal ${
+                                          isMethodDisabled
+                                            ? 'cursor-not-allowed opacity-60'
+                                            : 'cursor-pointer'
+                                        }`}
                                       >
                                         {method}
                                       </Label>
