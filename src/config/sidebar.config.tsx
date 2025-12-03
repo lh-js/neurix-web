@@ -57,13 +57,7 @@ export const sidebarMenuConfig: MenuItem[] = [
     label: '用户权限管理',
     icon: Shield,
     defaultOpen: true,
-    activePaths: [
-      '/admin/user',
-      '/admin/role-url',
-      '/admin/role',
-      '/admin/role-page',
-      '/admin/role-api',
-    ],
+    activePaths: ['/admin/user', '/admin/role', '/admin/role-page', '/admin/role-api'],
     children: [
       {
         id: 'user-management',
@@ -92,13 +86,6 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '接口权限',
         icon: Shield,
         href: '/admin/role-api',
-      },
-      {
-        id: 'role-url-management',
-        type: 'link',
-        label: '权限URL',
-        icon: Shield,
-        href: '/admin/role-url',
       },
     ],
   },

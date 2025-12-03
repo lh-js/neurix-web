@@ -62,7 +62,7 @@ function SidebarComponent() {
     // 对于非 /admin 的路径，需要确保是精确匹配或者是子路径（后面跟着 /）
     if (href !== '/admin' && pathname.startsWith(href)) {
       // 确保匹配的是完整路径，而不是部分匹配
-      // 例如：/admin/role 不应该匹配 /admin/role-url
+      // 例如：/admin/role 不应该匹配 /admin/role-page
       const nextChar = pathname[href.length]
       return nextChar === undefined || nextChar === '/' || nextChar === '?'
     }

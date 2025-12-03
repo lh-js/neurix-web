@@ -136,7 +136,7 @@ export default function RolePage() {
 
   // 获取公共页面
   const publicPages = rolePages.filter(page => page.isPublic).map(page => page.url)
-  const roleUrlsLoading = rolePagesLoading || roleApisLoading
+  const permissionsLoading = rolePagesLoading || roleApisLoading
 
   const openCreateDialog = () => {
     setEditingItem(null)
@@ -522,7 +522,7 @@ export default function RolePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>可访问页面</Label>
-                  {!roleUrlsLoading && rolePages.length > 0 && (
+                  {!permissionsLoading && rolePages.length > 0 && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -544,7 +544,7 @@ export default function RolePage() {
                   )}
                 </div>
                 <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
-                  {roleUrlsLoading ? (
+                  {permissionsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-8 w-full" />
                       <Skeleton className="h-8 w-full" />
@@ -594,7 +594,7 @@ export default function RolePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>可访问接口</Label>
-                  {!roleUrlsLoading && roleApis.length > 0 && (
+                  {!permissionsLoading && roleApis.length > 0 && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -610,7 +610,7 @@ export default function RolePage() {
                   )}
                 </div>
                 <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
-                  {roleUrlsLoading ? (
+                  {permissionsLoading ? (
                     <div className="space-y-2">
                       <Skeleton className="h-8 w-full" />
                       <Skeleton className="h-8 w-full" />
