@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -20,20 +21,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { CreateRolePageRequest } from '@/service/types/role-page'
+import type { CreateRoleApiRequest } from '@/service/types/role-api'
 
-interface RolePageFormDialogProps {
+interface RoleApiFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   editing?: boolean
-  formData: CreateRolePageRequest
-  onFormDataChange: (data: CreateRolePageRequest) => void
+  formData: CreateRoleApiRequest
+  onFormDataChange: (data: CreateRoleApiRequest) => void
   onSubmit: () => void
   loading?: boolean
   submitting?: boolean
+  onToggleMethod: (method: string) => void
+  onToggleAllMethods: () => void
+  httpMethods: string[]
 }
 
-export function RolePageFormDialog({
+export function RoleApiFormDialog({
   open,
   onOpenChange,
   editing = false,
@@ -42,18 +46,22 @@ export function RolePageFormDialog({
   onSubmit,
   loading = false,
   submitting = false,
-}: RolePageFormDialogProps) {
+  onToggleMethod,
+  onToggleAllMethods,
+  httpMethods,
+}: RoleApiFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{editing ? '编辑页面权限' : '新增页面权限'}</DialogTitle>
+          <DialogTitle>{editing ? '编辑接口权限' : '新增接口权限'}</DialogTitle>
           <DialogDescription>
-            {editing ? '修改页面权限信息' : '创建一个新的页面权限'}
+            {editing ? '修改接口权限信息' : '创建一个新的接口权限'}
           </DialogDescription>
         </DialogHeader>
         {loading ? (
           <div className="space-y-4 py-4">
+            <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -75,12 +83,44 @@ export function RolePageFormDialog({
               <Input
                 id="description"
                 value={formData.description}
-                onChange={e =>
-                  onFormDataChange({ ...formData, description: e.target.value })
-                }
+                onChange={e => onFormDataChange({ ...formData, description: e.target.value })}
                 placeholder="请输入描述"
                 disabled={loading}
               />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="method">HTTP 方法</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onToggleAllMethods}
+                  disabled={loading}
+                >
+                  {httpMethods.every(method => formData.method.includes(method))
+                    ? '取消全选'
+                    : '全选'}
+                </Button>
+              </div>
+              <div className="border rounded-md p-4 space-y-2">
+                {httpMethods.map(method => (
+                  <div key={method} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`method-${method}`}
+                      checked={formData.method.includes(method)}
+                      onCheckedChange={() => onToggleMethod(method)}
+                      disabled={loading}
+                    />
+                    <Label
+                      htmlFor={`method-${method}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {method}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="isPublic">是否公开</Label>
@@ -127,4 +167,3 @@ export function RolePageFormDialog({
     </Dialog>
   )
 }
-

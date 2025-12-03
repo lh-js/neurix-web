@@ -10,11 +10,7 @@ interface UseUserFormProps {
   handleUpdate: (id: number, data: Partial<CreateUserRequest>) => Promise<void>
 }
 
-export function useUserForm({
-  fetchUserById,
-  handleCreate,
-  handleUpdate,
-}: UseUserFormProps) {
+export function useUserForm({ fetchUserById, handleCreate, handleUpdate }: UseUserFormProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<User | null>(null)
   const [formData, setFormData] = useState<CreateUserRequest>({
@@ -137,4 +133,3 @@ export function useUserForm({
     handleSubmit,
   }
 }
-

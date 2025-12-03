@@ -53,9 +53,7 @@ export function UserFormDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{editing ? '编辑用户' : '新增用户'}</DialogTitle>
-          <DialogDescription>
-            {editing ? '修改用户信息' : '创建一个新的用户'}
-          </DialogDescription>
+          <DialogDescription>{editing ? '修改用户信息' : '创建一个新的用户'}</DialogDescription>
         </DialogHeader>
         {loading ? (
           <div className="space-y-4 py-4">
@@ -104,9 +102,7 @@ export function UserFormDialog({
               <Label htmlFor="role">角色</Label>
               <Select
                 value={formData.role.toString()}
-                onValueChange={value =>
-                  onFormDataChange({ ...formData, role: parseInt(value) })
-                }
+                onValueChange={value => onFormDataChange({ ...formData, role: parseInt(value) })}
                 disabled={loading || rolesLoading}
               >
                 <SelectTrigger id="role">
@@ -154,4 +150,3 @@ export function UserFormDialog({
     </Dialog>
   )
 }
-

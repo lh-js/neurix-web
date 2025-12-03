@@ -5,12 +5,11 @@ import { useRolePageForm } from '@/hooks/admin/role-page/use-role-page-form'
 import { useDeleteDialog } from '@/hooks/common/use-delete-dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Label } from '@/components/ui/label'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
-import { RolePageFormDialog } from '@/components/admin/role-page/role-page-form-dialog'
+import { RolePageFormDialog } from './components/role-page-form-dialog'
 import { BooleanFilter } from '@/components/common/boolean-filter'
 
 export default function RolePagePage() {

@@ -9,8 +9,8 @@ import { Users, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
-import { UserFormDialog } from '@/components/admin/user/user-form-dialog'
-import { UserRoleBadge } from '@/components/admin/user/user-role-badge'
+import { UserFormDialog } from './components/user-form-dialog'
+import { UserRoleBadge } from './components/user-role-badge'
 
 export default function UserPage() {
   const {

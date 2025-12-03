@@ -11,7 +11,7 @@ import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
-import { RoleFormDialog } from '@/components/admin/role/role-form-dialog'
+import { RoleFormDialog } from './components/role-form-dialog'
 
 export default function RolePage() {
   const {

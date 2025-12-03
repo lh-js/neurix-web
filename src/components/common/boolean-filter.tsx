@@ -31,10 +31,7 @@ export function BooleanFilter({
   return (
     <div className="flex items-center gap-2">
       <Label className="text-sm whitespace-nowrap">{label}</Label>
-      <Select
-        value={value}
-        onValueChange={val => onChange(val as 'all' | 'true' | 'false')}
-      >
+      <Select value={value} onValueChange={val => onChange(val as 'all' | 'true' | 'false')}>
         <SelectTrigger className="w-[120px]">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -47,4 +44,3 @@ export function BooleanFilter({
     </div>
   )
 }
-
