@@ -20,6 +20,10 @@ export async function getRoleUrlList(params: RoleUrlListParams): Promise<RoleUrl
     query.type = params.type.toString()
   }
 
+  if (typeof params.isPublic === 'boolean') {
+    query.isPublic = params.isPublic.toString()
+  }
+
   const response = await get<RoleUrlListResponse>('/role-url', query)
   return response
 }

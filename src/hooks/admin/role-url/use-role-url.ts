@@ -15,6 +15,7 @@ import {
 } from '@/service/types/role-url'
 
 type RoleUrlFilterTab = 'all' | 'page' | 'api'
+type RoleUrlPublicFilter = 'all' | 'true' | 'false'
 
 export function useRoleUrl() {
   const [data, setData] = useState<RoleUrlListResponse | null>(null)
@@ -23,6 +24,7 @@ export function useRoleUrl() {
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
   const [filterType, setFilterType] = useState<RoleUrlFilterTab>('all')
+  const [filterIsPublic, setFilterIsPublic] = useState<RoleUrlPublicFilter>('all')
   const fetchingRef = useRef(false)
 
   // 获取列表
@@ -40,7 +42,16 @@ export function useRoleUrl() {
       if (filterType === 'page') typeParam = 0
       if (filterType === 'api') typeParam = 1
 
-      const response = await getRoleUrlList({ page, pageSize, type: typeParam })
+      let isPublicParam: boolean | undefined
+      if (filterIsPublic === 'true') isPublicParam = true
+      if (filterIsPublic === 'false') isPublicParam = false
+
+      const response = await getRoleUrlList({
+        page,
+        pageSize,
+        type: typeParam,
+        isPublic: isPublicParam,
+      })
       setData(response)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '获取权限URL列表失败'
@@ -62,6 +73,12 @@ export function useRoleUrl() {
   // 切换筛选类型
   const handleFilterChange = (tab: RoleUrlFilterTab) => {
     setFilterType(tab)
+    setPage(1)
+  }
+
+  // 切换是否公开筛选
+  const handleIsPublicFilterChange = (value: RoleUrlPublicFilter) => {
+    setFilterIsPublic(value)
     setPage(1)
   }
 
@@ -132,7 +149,7 @@ export function useRoleUrl() {
   useEffect(() => {
     fetchList()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filterType])
+  }, [page, filterType, filterIsPublic])
 
   // 生成分页页码数组（智能显示）
   const getPageNumbers = (): (number | 'ellipsis')[] => {
@@ -187,8 +204,10 @@ export function useRoleUrl() {
     page,
     pageSize,
     filterType,
+    filterIsPublic,
     handlePageChange,
     handleFilterChange,
+    handleIsPublicFilterChange,
     fetchList,
     fetchRoleUrlById,
     handleCreate,

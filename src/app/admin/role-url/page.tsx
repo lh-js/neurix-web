@@ -70,7 +70,9 @@ export default function RoleUrlPage() {
     getTypeBadgeClass,
     getPageNumbers,
     filterType,
+    filterIsPublic,
     handleFilterChange,
+    handleIsPublicFilterChange,
   } = useRoleUrl()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -81,6 +83,7 @@ export default function RoleUrlPage() {
     url: '',
     description: '',
     type: 0,
+    isPublic: false,
   })
   const [dialogLoading, setDialogLoading] = useState(false)
 
@@ -90,6 +93,7 @@ export default function RoleUrlPage() {
       url: '',
       description: '',
       type: 0,
+      isPublic: false,
     })
     setIsDialogOpen(true)
   }
@@ -106,6 +110,7 @@ export default function RoleUrlPage() {
         url: roleUrl.url,
         description: roleUrl.description,
         type: roleUrl.type,
+        isPublic: roleUrl.isPublic,
       })
       setEditingItem(roleUrl)
     } catch {
@@ -114,6 +119,7 @@ export default function RoleUrlPage() {
         url: item.url,
         description: item.description,
         type: item.type,
+        isPublic: item.isPublic,
       })
       toast.error('获取详情失败，使用列表数据')
     } finally {
@@ -174,29 +180,54 @@ export default function RoleUrlPage() {
         </div>
       </div>
 
-      {/* 筛选 Tabs */}
-      <Tabs className="w-full">
-        <TabsList>
-          <TabsTrigger
-            data-state={filterType === 'all' ? 'active' : 'inactive'}
-            onClick={() => handleFilterChange('all')}
+      {/* 筛选区域 */}
+      <div className="flex items-center gap-4">
+        {/* 类型筛选 Tabs */}
+        <Tabs className="flex-1">
+          <TabsList>
+            <TabsTrigger
+              data-state={filterType === 'all' ? 'active' : 'inactive'}
+              onClick={() => handleFilterChange('all')}
+            >
+              全部
+            </TabsTrigger>
+            <TabsTrigger
+              data-state={filterType === 'page' ? 'active' : 'inactive'}
+              onClick={() => handleFilterChange('page')}
+            >
+              页面
+            </TabsTrigger>
+            <TabsTrigger
+              data-state={filterType === 'api' ? 'active' : 'inactive'}
+              onClick={() => handleFilterChange('api')}
+            >
+              接口
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* 是否公开筛选 */}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="isPublic-filter" className="text-sm whitespace-nowrap">
+            是否公开：
+          </Label>
+          <Select
+            value={filterIsPublic}
+            onValueChange={value =>
+              handleIsPublicFilterChange(value as 'all' | 'true' | 'false')
+            }
           >
-            全部
-          </TabsTrigger>
-          <TabsTrigger
-            data-state={filterType === 'page' ? 'active' : 'inactive'}
-            onClick={() => handleFilterChange('page')}
-          >
-            页面
-          </TabsTrigger>
-          <TabsTrigger
-            data-state={filterType === 'api' ? 'active' : 'inactive'}
-            onClick={() => handleFilterChange('api')}
-          >
-            接口
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+            <SelectTrigger id="isPublic-filter" className="w-[120px]">
+              <SelectValue placeholder="全部" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部</SelectItem>
+              <SelectItem value="true">是</SelectItem>
+              <SelectItem value="false">否</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* 错误提示 */}
       {error && (
@@ -222,6 +253,7 @@ export default function RoleUrlPage() {
                   <TableHead>URL</TableHead>
                   <TableHead>描述</TableHead>
                   <TableHead>类型</TableHead>
+                  <TableHead>是否公开</TableHead>
                   <TableHead>创建时间</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -241,9 +273,20 @@ export default function RoleUrlPage() {
                         {getTypeLabel(item.type)}
                       </span>
                     </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
-                        </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          item.isPublic
+                            ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+                            : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+                        }`}
+                      >
+                        {item.isPublic ? '是' : '否'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
@@ -399,6 +442,24 @@ export default function RoleUrlPage() {
                   <SelectContent>
                     <SelectItem value="0">页面</SelectItem>
                     <SelectItem value="1">接口</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="isPublic">是否公开</Label>
+                <Select
+                  value={formData.isPublic.toString()}
+                  onValueChange={value =>
+                    setFormData({ ...formData, isPublic: value === 'true' })
+                  }
+                  disabled={dialogLoading}
+                >
+                  <SelectTrigger id="isPublic">
+                    <SelectValue placeholder="请选择是否公开" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">是</SelectItem>
+                    <SelectItem value="false">否</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

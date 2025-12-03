@@ -11,6 +11,7 @@ export interface RoleUrl {
   url: string
   description: string
   type: RoleUrlType
+  isPublic: boolean
   createTime?: string
 }
 
@@ -21,6 +22,7 @@ export interface CreateRoleUrlRequest {
   url: string
   description: string
   type: RoleUrlType
+  isPublic: boolean
 }
 
 /**
@@ -30,6 +32,7 @@ export interface UpdateRoleUrlRequest {
   url?: string
   description?: string
   type?: RoleUrlType
+  isPublic?: boolean
 }
 
 /**
@@ -39,6 +42,7 @@ export interface RoleUrlListParams {
   page: number
   pageSize: number
   type?: RoleUrlType
+  isPublic?: boolean
 }
 
 /**
