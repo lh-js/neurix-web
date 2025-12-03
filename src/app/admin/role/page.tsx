@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/pagination'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function RolePage() {
   const {
@@ -67,6 +68,7 @@ export default function RolePage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [editingItem, setEditingItem] = useState<Role | null>(null)
   const [formData, setFormData] = useState<CreateRoleRequest>({
     name: '',
@@ -76,6 +78,7 @@ export default function RolePage() {
     accessibleApis: [],
   })
   const [dialogLoading, setDialogLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [roleUrls, setRoleUrls] = useState<RoleUrl[]>([])
   const [roleUrlsLoading, setRoleUrlsLoading] = useState(false)
   const fetchingRoleUrlsRef = useRef(false)
@@ -156,7 +159,10 @@ export default function RolePage() {
   }
 
   const handleSubmit = async () => {
+    if (submitting) return
+
     try {
+      setSubmitting(true)
       // 新增时，确保公共页面始终在提交的数据中
       const submitData = editingItem
         ? formData
@@ -174,6 +180,8 @@ export default function RolePage() {
       setIsDialogOpen(false)
     } catch {
       // 错误已在 hook 中处理
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -183,15 +191,19 @@ export default function RolePage() {
   }
 
   const confirmDelete = async () => {
-    if (deletingId === null) return
+    if (deletingId === null || deleting) return
 
     try {
+      setDeleting(true)
       await handleDelete(deletingId)
       toast.success('删除成功')
-      setIsDeleteDialogOpen(false)
       setDeletingId(null)
+      setIsDeleteDialogOpen(false)
     } catch {
       // 错误已在 hook 中处理
+      // 删除失败时保持对话框打开，让用户可以看到错误信息
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -612,19 +624,37 @@ export default function RolePage() {
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
-              disabled={dialogLoading}
+              disabled={submitting || dialogLoading}
             >
               取消
             </Button>
-            <Button onClick={handleSubmit} disabled={dialogLoading}>
-              {editingItem ? '更新' : '创建'}
+            <Button onClick={handleSubmit} disabled={submitting || dialogLoading}>
+              {submitting ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  处理中...
+                </>
+              ) : editingItem ? (
+                '更新'
+              ) : (
+                '创建'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={open => {
+          // 删除过程中不允许关闭对话框
+          if (!open && deleting) {
+            return
+          }
+          setIsDeleteDialogOpen(open)
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
@@ -633,12 +663,30 @@ export default function RolePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingId(null)}>取消</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeletingId(null)} disabled={deleting}>
+              取消
+            </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={async e => {
+                // 阻止 AlertDialogAction 的默认关闭行为
+                e.preventDefault()
+                // 如果正在删除，直接返回
+                if (deleting) {
+                  return
+                }
+                await confirmDelete()
+              }}
+              disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除
+              {deleting ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  删除中...
+                </>
+              ) : (
+                '删除'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
