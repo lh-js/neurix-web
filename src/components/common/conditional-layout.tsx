@@ -1,9 +1,9 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import Header from '@/components/layout/header'
-import Footer from '@/components/layout/footer'
-import Sidebar from '@/components/layout/sidebar'
+import Header from '@/components/layout/header/header'
+import Footer from '@/components/layout/footer/footer'
+import Sidebar from '@/components/layout/sidebar/sidebar'
 import { AuthGuard } from '@/components/common/auth-guard'
 import { isMinimalLayoutRoute, shouldShowSidebar } from '@/config/auth.config'
 
