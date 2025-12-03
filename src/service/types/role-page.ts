@@ -48,4 +48,3 @@ export interface RolePageListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
-

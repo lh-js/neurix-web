@@ -62,4 +62,3 @@ export async function getAllRolePages(): Promise<RolePage[]> {
   const response = await get<RolePage[]>('/role-page/all')
   return response
 }
-

@@ -1,27 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  getRolePageList,
-  getRolePageById,
-  createRolePage,
-  updateRolePage,
-  deleteRolePage,
-} from '@/service/api/role-page'
+  getRoleApiList,
+  getRoleApiById,
+  createRoleApi,
+  updateRoleApi,
+  deleteRoleApi,
+} from '@/service/api/role-api'
 import {
-  RolePage,
-  CreateRolePageRequest,
-  UpdateRolePageRequest,
-  RolePageListResponse,
-} from '@/service/types/role-page'
+  RoleApi,
+  CreateRoleApiRequest,
+  UpdateRoleApiRequest,
+  RoleApiListResponse,
+} from '@/service/types/role-api'
 
-type RolePagePublicFilter = 'all' | 'true' | 'false'
+type RoleApiPublicFilter = 'all' | 'true' | 'false'
 
-export function useRolePage() {
-  const [data, setData] = useState<RolePageListResponse | null>(null)
+export function useRoleApi() {
+  const [data, setData] = useState<RoleApiListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
-  const [filterIsPublic, setFilterIsPublic] = useState<RolePagePublicFilter>('all')
+  const [filterIsPublic, setFilterIsPublic] = useState<RoleApiPublicFilter>('all')
   const fetchingRef = useRef(false)
 
   // 获取列表
@@ -39,16 +39,16 @@ export function useRolePage() {
       if (filterIsPublic === 'true') isPublicParam = true
       if (filterIsPublic === 'false') isPublicParam = false
 
-      const response = await getRolePageList({
+      const response = await getRoleApiList({
         page,
         pageSize,
         isPublic: isPublicParam,
       })
       setData(response)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取页面权限列表失败'
+      const errorMessage = err instanceof Error ? err.message : '获取接口权限列表失败'
       setError(errorMessage)
-      console.error('获取页面权限列表失败:', err)
+      console.error('获取接口权限列表失败:', err)
     } finally {
       setLoading(false)
       fetchingRef.current = false
@@ -63,32 +63,32 @@ export function useRolePage() {
   }
 
   // 切换是否公开筛选
-  const handleIsPublicFilterChange = (value: RolePagePublicFilter) => {
+  const handleIsPublicFilterChange = (value: RoleApiPublicFilter) => {
     setFilterIsPublic(value)
     setPage(1)
   }
 
   // 创建
-  const handleCreate = async (createData: CreateRolePageRequest) => {
+  const handleCreate = async (createData: CreateRoleApiRequest) => {
     try {
-      await createRolePage(createData)
+      await createRoleApi(createData)
       // 创建成功后刷新列表
       await fetchList()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '创建页面权限失败'
+      const errorMessage = err instanceof Error ? err.message : '创建接口权限失败'
       setError(errorMessage)
       throw err
     }
   }
 
   // 更新
-  const handleUpdate = async (id: number, updateData: UpdateRolePageRequest) => {
+  const handleUpdate = async (id: number, updateData: UpdateRoleApiRequest) => {
     try {
-      await updateRolePage(id, updateData)
+      await updateRoleApi(id, updateData)
       // 更新成功后刷新列表
       await fetchList()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '更新页面权限失败'
+      const errorMessage = err instanceof Error ? err.message : '更新接口权限失败'
       setError(errorMessage)
       throw err
     }
@@ -97,23 +97,23 @@ export function useRolePage() {
   // 删除
   const handleDelete = async (id: number) => {
     try {
-      await deleteRolePage(id)
+      await deleteRoleApi(id)
       // 删除成功后刷新列表
       await fetchList()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '删除页面权限失败'
+      const errorMessage = err instanceof Error ? err.message : '删除接口权限失败'
       setError(errorMessage)
       throw err
     }
   }
 
-  // 获取单个页面权限详情
-  const fetchRolePageById = async (id: number): Promise<RolePage> => {
+  // 获取单个接口权限详情
+  const fetchRoleApiById = async (id: number): Promise<RoleApi> => {
     try {
-      const response = await getRolePageById(id)
+      const response = await getRoleApiById(id)
       return response
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取页面权限详情失败'
+      const errorMessage = err instanceof Error ? err.message : '获取接口权限详情失败'
       setError(errorMessage)
       throw err
     }
@@ -180,7 +180,7 @@ export function useRolePage() {
     handlePageChange,
     handleIsPublicFilterChange,
     fetchList,
-    fetchRolePageById,
+    fetchRoleApiById,
     handleCreate,
     handleUpdate,
     handleDelete,
