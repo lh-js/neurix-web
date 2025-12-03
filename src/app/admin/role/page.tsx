@@ -313,6 +313,89 @@ export default function RolePage() {
     })
   }
 
+  // 批量快捷选择：增删改查（针对所有接口）
+  const toggleAllCrudOperation = (operation: 'create' | 'read' | 'update' | 'delete') => {
+    // 定义操作对应的 method
+    const operationMethods: Record<string, string[]> = {
+      create: ['POST'],
+      read: ['GET'],
+      update: ['PUT', 'PATCH'],
+      delete: ['DELETE'],
+    }
+
+    const targetMethods = operationMethods[operation]
+
+    setFormData(prev => {
+      // 检查所有接口是否都已选中该操作的所有 method
+      const allSelected = roleApis.every(api => {
+        const supportedMethods = targetMethods.filter(method => api.method?.includes(method))
+        if (supportedMethods.length === 0) return true // 不支持该操作的接口，视为已选中
+
+        const selectedApi = prev.accessibleApis.find(a => a.url === api.url)
+        if (!selectedApi) return false
+        return supportedMethods.every(method => selectedApi.method.includes(method))
+      })
+
+      if (allSelected) {
+        // 取消选择：从所有接口中移除该操作的方法
+        return {
+          ...prev,
+          accessibleApis: prev.accessibleApis
+            .map(api => {
+              const apiDef = roleApis.find(a => a.url === api.url)
+              if (!apiDef) return api
+
+              const supportedMethods = targetMethods.filter(method =>
+                apiDef.method?.includes(method)
+              )
+              if (supportedMethods.length === 0) return api
+
+              // 移除目标方法，但保留公共接口的 method（新增模式）
+              const newMethods = api.method.filter(m => {
+                if (!editingItem) {
+                  const publicApi = publicApis.find(pa => pa.url === api.url)
+                  if (publicApi && publicApi.method.includes(m)) {
+                    return true
+                  }
+                }
+                return !supportedMethods.includes(m)
+              })
+
+              if (newMethods.length === 0) {
+                return null // 标记为删除
+              }
+              return { ...api, method: newMethods }
+            })
+            .filter((api): api is typeof api & { url: string; method: string[] } => api !== null),
+        }
+      } else {
+        // 选择：为所有接口添加该操作的方法
+        const updatedApis = [...prev.accessibleApis]
+
+        roleApis.forEach(apiDef => {
+          const supportedMethods = targetMethods.filter(method => apiDef.method?.includes(method))
+          if (supportedMethods.length === 0) return
+
+          const existingIndex = updatedApis.findIndex(a => a.url === apiDef.url)
+          if (existingIndex >= 0) {
+            // 更新现有接口
+            const currentMethods = updatedApis[existingIndex].method
+            const newMethods = [...new Set([...currentMethods, ...supportedMethods])]
+            updatedApis[existingIndex] = { ...updatedApis[existingIndex], method: newMethods }
+          } else {
+            // 添加新接口
+            updatedApis.push({
+              url: apiDef.url,
+              method: supportedMethods,
+            })
+          }
+        })
+
+        return { ...prev, accessibleApis: updatedApis }
+      }
+    })
+  }
+
   // 切换接口的某个 method
   const toggleApiMethod = (url: string, method: string) => {
     // 在新增模式下，公共接口的 method 不允许取消选择
@@ -360,56 +443,66 @@ export default function RolePage() {
   }
 
   // 全选/取消全选页面权限
-  const toggleAllPages = () => {
+  const toggleAllPages = (checked: boolean | 'indeterminate') => {
+    if (checked === 'indeterminate') return
+
     setFormData(prev => {
       const allPageUrls = rolePages.map(page => page.url)
       if (!editingItem) {
         // 新增时：全选时包含公共页面，取消全选时只取消非公共页面
         const nonPublicPages = allPageUrls.filter(url => !publicPages.includes(url))
-        const allNonPublicSelected = nonPublicPages.every(url => prev.accessiblePages.includes(url))
         return {
           ...prev,
-          accessiblePages: allNonPublicSelected
-            ? [...publicPages] // 取消全选：只保留公共页面
-            : [...publicPages, ...nonPublicPages], // 全选：公共页面 + 所有非公共页面
+          accessiblePages: checked
+            ? [...publicPages, ...nonPublicPages] // 全选：公共页面 + 所有非公共页面
+            : [...publicPages], // 取消全选：只保留公共页面
         }
       } else {
         // 编辑时：正常全选/取消全选
-        const allSelected = allPageUrls.every(url => prev.accessiblePages.includes(url))
         return {
           ...prev,
-          accessiblePages: allSelected ? [] : allPageUrls,
+          accessiblePages: checked ? allPageUrls : [],
         }
       }
     })
   }
 
   // 全选/取消全选接口权限
-  const toggleAllApis = () => {
-    setFormData(prev => {
-      // 检查是否所有接口的所有 method 都被选中
-      const allSelected = roleApis.every(api => {
-        const selectedApi = prev.accessibleApis.find(a => a.url === api.url)
-        if (!selectedApi) return false
-        // 检查该接口的所有 method 是否都被选中
-        const apiMethods = api.method || []
-        return apiMethods.every(method => selectedApi.method.includes(method))
-      })
+  const toggleAllApis = (checked: boolean | 'indeterminate') => {
+    if (checked === 'indeterminate') return
 
-      if (allSelected) {
-        // 取消全选：移除所有接口
-        return {
-          ...prev,
-          accessibleApis: [],
-        }
-      } else {
-        // 全选：添加所有接口，使用接口定义中的 method
-        return {
-          ...prev,
-          accessibleApis: roleApis.map(api => ({
+    setFormData(prev => {
+      if (!editingItem) {
+        // 新增模式：全选时包含公共接口，取消全选时只取消非公共接口
+        const nonPublicApis = roleApis
+          .filter(api => !api.isPublic)
+          .map(api => ({
             url: api.url,
             method: api.method || [],
-          })),
+          }))
+        return {
+          ...prev,
+          accessibleApis: checked
+            ? [...publicApis, ...nonPublicApis] // 全选：公共接口 + 所有非公共接口
+            : [...publicApis], // 取消全选：只保留公共接口
+        }
+      } else {
+        // 编辑模式：正常全选/取消全选
+        if (checked) {
+          // 全选：添加所有接口，使用接口定义中的 method
+          return {
+            ...prev,
+            accessibleApis: roleApis.map(api => ({
+              url: api.url,
+              method: api.method || [],
+            })),
+          }
+        } else {
+          // 取消全选：移除所有接口
+          return {
+            ...prev,
+            accessibleApis: [],
+          }
         }
       }
     })
@@ -646,24 +739,26 @@ export default function RolePage() {
                 <div className="flex items-center justify-between">
                   <Label>可访问页面</Label>
                   {!permissionsLoading && rolePages.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleAllPages}
-                      disabled={dialogLoading}
-                      className="h-7 text-xs"
-                    >
-                      {editingItem
-                        ? rolePages.every(page => formData.accessiblePages.includes(page.url))
-                          ? '取消全选'
-                          : '全选'
-                        : rolePages
-                              .filter(page => !page.isPublic)
-                              .every(page => formData.accessiblePages.includes(page.url))
-                          ? '取消全选'
-                          : '全选'}
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="select-all-pages"
+                        checked={
+                          editingItem
+                            ? rolePages.every(page => formData.accessiblePages.includes(page.url))
+                            : rolePages
+                                .filter(page => !page.isPublic)
+                                .every(page => formData.accessiblePages.includes(page.url))
+                        }
+                        onCheckedChange={toggleAllPages}
+                        disabled={dialogLoading}
+                      />
+                      <Label
+                        htmlFor="select-all-pages"
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        全选
+                      </Label>
+                    </div>
                   )}
                 </div>
                 <div className="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2">
@@ -718,24 +813,87 @@ export default function RolePage() {
                 <div className="flex items-center justify-between">
                   <Label>可访问接口</Label>
                   {!permissionsLoading && roleApis.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleAllApis}
-                      disabled={dialogLoading}
-                      className="h-7 text-xs"
-                    >
-                      {roleApis.every(api => {
-                        const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
-                        if (!selectedApi) return false
-                        // 检查该接口的所有 method 是否都被选中
-                        const apiMethods = api.method || []
-                        return apiMethods.every(method => selectedApi.method.includes(method))
-                      })
-                        ? '取消全选'
-                        : '全选'}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      {/* 增删改查快捷选择 */}
+                      <div className="flex items-center gap-3">
+                        {(['read', 'create', 'update', 'delete'] as const).map(operation => {
+                          const operationLabels = {
+                            read: '查',
+                            create: '增',
+                            update: '改',
+                            delete: '删',
+                          }
+                          const operationMethods: Record<string, string[]> = {
+                            create: ['POST'],
+                            read: ['GET'],
+                            update: ['PUT', 'PATCH'],
+                            delete: ['DELETE'],
+                          }
+                          const targetMethods = operationMethods[operation]
+
+                          // 检查所有接口是否都已选中该操作的所有 method
+                          const allSelected = roleApis.every(api => {
+                            const supportedMethods = targetMethods.filter(method =>
+                              api.method?.includes(method)
+                            )
+                            if (supportedMethods.length === 0) return true
+
+                            const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
+                            if (!selectedApi) return false
+                            return supportedMethods.every(method =>
+                              selectedApi.method.includes(method)
+                            )
+                          })
+
+                          const hasSupportedApis = roleApis.some(api => {
+                            const supportedMethods = targetMethods.filter(method =>
+                              api.method?.includes(method)
+                            )
+                            return supportedMethods.length > 0
+                          })
+
+                          if (!hasSupportedApis) return null
+
+                          return (
+                            <div key={operation} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`crud-${operation}`}
+                                checked={allSelected}
+                                onCheckedChange={() => toggleAllCrudOperation(operation)}
+                                disabled={dialogLoading}
+                              />
+                              <Label
+                                htmlFor={`crud-${operation}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {operationLabels[operation]}
+                              </Label>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {/* 全选复选框 */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="select-all-apis"
+                          checked={roleApis.every(api => {
+                            const selectedApi = formData.accessibleApis.find(a => a.url === api.url)
+                            if (!selectedApi) return false
+                            // 检查该接口的所有 method 是否都被选中
+                            const apiMethods = api.method || []
+                            return apiMethods.every(method => selectedApi.method.includes(method))
+                          })}
+                          onCheckedChange={toggleAllApis}
+                          disabled={dialogLoading}
+                        />
+                        <Label
+                          htmlFor="select-all-apis"
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          全选
+                        </Label>
+                      </div>
+                    </div>
                   )}
                 </div>
                 <div className="border rounded-md p-4 max-h-96 overflow-y-auto space-y-4">
