@@ -61,8 +61,7 @@ export function useAuth() {
 
     try {
       const response = await getAccessibleResources()
-      // 确保 login 页面始终在可访问资源列表中（保底）
-      const pages = response.accessibleResources || []
+      const pages = [...(response.accessiblePages || [])]
       if (!pages.includes(LOGIN_PATH)) {
         pages.push(LOGIN_PATH)
       }

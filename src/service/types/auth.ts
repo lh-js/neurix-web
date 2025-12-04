@@ -25,9 +25,10 @@ export interface UserInfo {
 
 /**
  * 可访问资源响应数据
- * 如果登录：返回该用户可访问的资源（含页面等）
+ * 如果登录：返回该用户可访问的资源（含页面、元素等）
  * 如果未登录：只返回公共资源
  */
 export interface AccessibleResourcesResponse {
-  accessibleResources: string[] // 可访问的资源标识（页面路径等）
+  accessiblePages: string[] // 可访问的页面路径（包含公共页面）
+  accessibleElements: string[] // 可访问的元素标识（可选）
 }
