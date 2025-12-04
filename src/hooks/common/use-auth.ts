@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
-import { getUserInfo, logout, getAccessiblePages } from '@/service/api/auth'
+import { getUserInfo, logout, getAccessibleResources } from '@/service/api/auth'
 import { isAuthenticated } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 
@@ -53,16 +53,16 @@ export function useAuth() {
     await fetchUserInfo()
   }
 
-  // 获取可访问页面（无论是否登录都会请求）
-  const fetchAccessiblePages = async () => {
+  // 获取可访问资源（无论是否登录都会请求）
+  const fetchAccessibleResources = async () => {
     runInAction(() => {
       userStore.pagesLoading = true
     })
 
     try {
-      const response = await getAccessiblePages()
-      // 确保 login 页面始终在可访问页面列表中（保底）
-      const pages = response.accessiblePages || []
+      const response = await getAccessibleResources()
+      // 确保 login 页面始终在可访问资源列表中（保底）
+      const pages = response.accessibleResources || []
       if (!pages.includes(LOGIN_PATH)) {
         pages.push(LOGIN_PATH)
       }
@@ -71,7 +71,7 @@ export function useAuth() {
         userStore.pagesLoading = false
       })
     } catch (error) {
-      console.error('获取可访问页面失败:', error)
+      console.error('获取可访问资源失败:', error)
       // 即使接口失败，也至少保证 login 页面可访问
       runInAction(() => {
         userStore.accessiblePages = [LOGIN_PATH]
@@ -98,7 +98,7 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 自动获取可访问页面（只在客户端调用，且只初始化一次，无论是否登录都会请求）
+  // 自动获取可访问资源（只在客户端调用，且只初始化一次，无论是否登录都会请求）
   useEffect(() => {
     if (userStore.pagesInitialized || typeof window === 'undefined') {
       return
@@ -108,8 +108,8 @@ export function useAuth() {
       userStore.pagesInitialized = true
     })
 
-    // 页面加载时获取一次可访问页面（无论是否登录）
-    fetchAccessiblePages()
+    // 页面加载时获取一次可访问资源（无论是否登录）
+    fetchAccessibleResources()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -135,7 +135,7 @@ export function useAuth() {
     pagesInitialized: userStore.pagesInitialized,
     fetchUserInfo,
     refreshUserInfo,
-    fetchAccessiblePages,
+    fetchAccessibleResources,
     logout: handleLogout,
   }
 }
