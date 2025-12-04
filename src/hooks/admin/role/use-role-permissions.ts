@@ -70,7 +70,7 @@ export function useRolePermissions() {
     .filter(api => api.isPublic)
     .map(api => ({
       url: api.url,
-      method: api.method || [],
+      methods: api.methods || [],
     }))
 
   const permissionsLoading = rolePagesLoading || roleApisLoading

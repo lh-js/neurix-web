@@ -111,12 +111,12 @@ export default function RoleApiPage() {
             render: item => item.description,
           },
           {
-            key: 'method',
+            key: 'methods',
             header: 'HTTP 方法',
             render: item => (
               <div className="flex flex-wrap gap-1">
-                {item.method && item.method.length > 0 ? (
-                  item.method.map(method => (
+                {item.methods && item.methods.length > 0 ? (
+                  item.methods.map(method => (
                     <span
                       key={method}
                       className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"

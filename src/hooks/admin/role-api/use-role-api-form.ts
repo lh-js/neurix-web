@@ -20,7 +20,7 @@ export function useRoleApiForm({
   const [formData, setFormData] = useState<CreateRoleApiRequest>({
     url: '',
     description: '',
-    method: [],
+    methods: [],
     isPublic: false,
   })
   const [dialogLoading, setDialogLoading] = useState(false)
@@ -31,7 +31,7 @@ export function useRoleApiForm({
     setFormData({
       url: '',
       description: '',
-      method: [],
+      methods: [],
       isPublic: false,
     })
     setIsDialogOpen(true)
@@ -48,7 +48,7 @@ export function useRoleApiForm({
       setFormData({
         url: roleApi.url,
         description: roleApi.description,
-        method: roleApi.method || [],
+        methods: roleApi.methods || [],
         isPublic: roleApi.isPublic,
       })
       setEditingItem(roleApi)
@@ -57,7 +57,7 @@ export function useRoleApiForm({
       setFormData({
         url: item.url,
         description: item.description,
-        method: item.method || [],
+        methods: item.methods || [],
         isPublic: item.isPublic,
       })
       toast.error('获取详情失败，使用列表数据')
@@ -70,7 +70,7 @@ export function useRoleApiForm({
     if (submitting) return
 
     // 验证至少选择一个 HTTP 方法
-    if (formData.method.length === 0) {
+    if (formData.methods.length === 0) {
       toast.error('请至少选择一个 HTTP 方法')
       return
     }
@@ -94,19 +94,19 @@ export function useRoleApiForm({
 
   const toggleMethod = (method: string) => {
     setFormData(prev => {
-      const methods = prev.method.includes(method)
-        ? prev.method.filter(m => m !== method)
-        : [...prev.method, method]
-      return { ...prev, method: methods }
+      const methods = prev.methods.includes(method)
+        ? prev.methods.filter(m => m !== method)
+        : [...prev.methods, method]
+      return { ...prev, methods: methods }
     })
   }
 
   const toggleAllMethods = () => {
     setFormData(prev => {
-      const allSelected = HTTP_METHODS.every(method => prev.method.includes(method))
+      const allSelected = HTTP_METHODS.every(method => prev.methods.includes(method))
       return {
         ...prev,
-        method: allSelected ? [] : [...HTTP_METHODS],
+        methods: allSelected ? [] : [...HTTP_METHODS],
       }
     })
   }

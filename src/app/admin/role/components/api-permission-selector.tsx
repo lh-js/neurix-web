@@ -45,60 +45,60 @@ export function ApiPermissionSelector({
   const allSelected = apis.every(api => {
     const selectedApi = selectedApis.find(a => a.url === api.url)
     if (!selectedApi) return false
-    const apiMethods = api.method || []
-    return apiMethods.every(method => selectedApi.method.includes(method))
+    const apiMethods = api.methods || []
+    return apiMethods.every(method => (selectedApi.methods || []).includes(method))
   })
 
   // 计算增删改查的状态
   const crudStates: Record<CrudOperation, boolean> = {
     read: apis.every(api => {
-      const supportedMethods = operationMethods.read.filter(method => api.method?.includes(method))
+      const supportedMethods = operationMethods.read.filter(method => api.methods?.includes(method))
       if (supportedMethods.length === 0) return true
       const selectedApi = selectedApis.find(a => a.url === api.url)
       if (!selectedApi) return false
-      return supportedMethods.every(method => selectedApi.method.includes(method))
+      return supportedMethods.every(method => (selectedApi.methods || []).includes(method))
     }),
     create: apis.every(api => {
       const supportedMethods = operationMethods.create.filter(method =>
-        api.method?.includes(method)
+        api.methods?.includes(method)
       )
       if (supportedMethods.length === 0) return true
       const selectedApi = selectedApis.find(a => a.url === api.url)
       if (!selectedApi) return false
-      return supportedMethods.every(method => selectedApi.method.includes(method))
+      return supportedMethods.every(method => (selectedApi.methods || []).includes(method))
     }),
     update: apis.every(api => {
       const supportedMethods = operationMethods.update.filter(method =>
-        api.method?.includes(method)
+        api.methods?.includes(method)
       )
       if (supportedMethods.length === 0) return true
       const selectedApi = selectedApis.find(a => a.url === api.url)
       if (!selectedApi) return false
-      return supportedMethods.every(method => selectedApi.method.includes(method))
+      return supportedMethods.every(method => (selectedApi.methods || []).includes(method))
     }),
     delete: apis.every(api => {
       const supportedMethods = operationMethods.delete.filter(method =>
-        api.method?.includes(method)
+        api.methods?.includes(method)
       )
       if (supportedMethods.length === 0) return true
       const selectedApi = selectedApis.find(a => a.url === api.url)
       if (!selectedApi) return false
-      return supportedMethods.every(method => selectedApi.method.includes(method))
+      return supportedMethods.every(method => (selectedApi.methods || []).includes(method))
     }),
   }
 
   // 检查哪些操作有支持的接口
   const availableOperations: CrudOperation[] = []
-  if (apis.some(api => api.method?.some(m => operationMethods.read.includes(m)))) {
+  if (apis.some(api => api.methods?.some(m => operationMethods.read.includes(m)))) {
     availableOperations.push('read')
   }
-  if (apis.some(api => api.method?.some(m => operationMethods.create.includes(m)))) {
+  if (apis.some(api => api.methods?.some(m => operationMethods.create.includes(m)))) {
     availableOperations.push('create')
   }
-  if (apis.some(api => api.method?.some(m => operationMethods.update.includes(m)))) {
+  if (apis.some(api => api.methods?.some(m => operationMethods.update.includes(m)))) {
     availableOperations.push('update')
   }
-  if (apis.some(api => api.method?.some(m => operationMethods.delete.includes(m)))) {
+  if (apis.some(api => api.methods?.some(m => operationMethods.delete.includes(m)))) {
     availableOperations.push('delete')
   }
 
@@ -142,7 +142,7 @@ export function ApiPermissionSelector({
           apis.map(api => {
             const selectedApi = selectedApis.find(a => a.url === api.url)
             const isApiSelected = !!selectedApi
-            const availableMethods = api.method || []
+            const availableMethods = api.methods || []
             const isPublic = api.isPublic
             const isApiDisabled = disabled || (!editing && isPublic)
 
@@ -179,12 +179,15 @@ export function ApiPermissionSelector({
                     <div className="text-xs text-muted-foreground">选择 HTTP 方法：</div>
                     <div className="flex flex-wrap gap-2">
                       {availableMethods.map(method => {
-                        const isMethodSelected = selectedApi?.method.includes(method) || false
+                        const isMethodSelected =
+                          (selectedApi?.methods || []).includes(method) || false
                         const isMethodDisabled =
                           disabled ||
                           (!editing &&
                             isPublic &&
-                            publicApis.some(pa => pa.url === api.url && pa.method.includes(method)))
+                            publicApis.some(
+                              pa => pa.url === api.url && (pa.methods || []).includes(method)
+                            ))
 
                         return (
                           <div key={method} className="flex items-center space-x-1">

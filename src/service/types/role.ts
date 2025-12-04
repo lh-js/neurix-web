@@ -3,7 +3,7 @@
  */
 export interface AccessibleApi {
   url: string
-  method: string[]
+  methods: string[]
 }
 
 /**

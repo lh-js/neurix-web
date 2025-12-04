@@ -5,7 +5,7 @@ export interface RoleApi {
   id: number
   url: string
   description: string
-  method: string[] // HTTP 方法数组，如 ['GET', 'POST']
+  methods: string[] // HTTP 方法数组，如 ['GET', 'POST']
   isPublic: boolean
   createTime?: string
 }

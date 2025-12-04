@@ -98,7 +98,7 @@ export function RoleApiFormDialog({
                   onClick={onToggleAllMethods}
                   disabled={loading}
                 >
-                  {httpMethods.every(method => formData.method.includes(method))
+                  {httpMethods.every(method => formData.methods.includes(method))
                     ? '取消全选'
                     : '全选'}
                 </Button>
@@ -108,7 +108,7 @@ export function RoleApiFormDialog({
                   <div key={method} className="flex items-center space-x-2">
                     <Checkbox
                       id={`method-${method}`}
-                      checked={formData.method.includes(method)}
+                      checked={formData.methods.includes(method)}
                       onCheckedChange={() => onToggleMethod(method)}
                       disabled={loading}
                     />

@@ -139,7 +139,7 @@ export function RoleFormDialog({
               disabled={loading}
               onToggleApi={onToggleApi}
               onToggleMethod={onToggleMethod}
-              onToggleAllApis={onToggleAllApis}
+              onToggleAll={onToggleAllApis}
               onCrudOperationChange={onCrudOperationChange}
             />
           </div>

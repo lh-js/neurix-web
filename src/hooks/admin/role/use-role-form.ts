@@ -36,27 +36,14 @@ export function useRoleForm({
   const [dialogLoading, setDialogLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // 处理 accessibleApis：如果是旧格式（string[]），转换为新格式
   const convertAccessibleApis = (
     apis: Role['accessibleApis']
   ): CreateRoleRequest['accessibleApis'] => {
     if (!apis || apis.length === 0) return []
-    // 检查第一个元素是否是字符串（旧格式）
-    if (typeof apis[0] === 'string') {
-      // 旧格式：string[]，需要转换为新格式
-      const oldApis = apis as unknown as string[]
-      return oldApis.map(url => {
-        // 查找对应的 API 定义，获取默认的 method
-        const apiDef = roleApis.find(api => api.url === url)
-        return {
-          url,
-          method: apiDef?.method || [],
-        }
-      })
-    } else {
-      // 新格式：AccessibleApi[]
-      return apis as CreateRoleRequest['accessibleApis']
-    }
+    return apis.map(api => ({
+      url: api.url,
+      methods: api.methods || [],
+    }))
   }
 
   const openCreateDialog = () => {
@@ -67,7 +54,10 @@ export function useRoleForm({
       description: '',
       level: 0,
       accessiblePages: [...publicPages],
-      accessibleApis: [...publicApis], // 默认选中所有公共接口（包含所有 method）
+      accessibleApis: publicApis.map(api => ({
+        url: api.url,
+        methods: api.methods || [],
+      })), // 默认选中所有公共接口（包含所有 method）
     })
     setIsDialogOpen(true)
   }

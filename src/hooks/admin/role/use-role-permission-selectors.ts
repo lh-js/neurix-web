@@ -67,7 +67,7 @@ export function useRolePermissionSelectors({
               ...prev.accessibleApis,
               {
                 url,
-                method: apiDef?.method || [],
+                methods: apiDef?.methods || [],
               },
             ],
           }
@@ -83,7 +83,7 @@ export function useRolePermissionSelectors({
       // 在新增模式下，公共接口的 method 不允许取消选择
       if (!editingItem) {
         const publicApi = publicApis.find(api => api.url === url)
-        if (publicApi && publicApi.method.includes(method)) {
+        if (publicApi && publicApi.methods.includes(method)) {
           return
         }
       }
@@ -92,9 +92,9 @@ export function useRolePermissionSelectors({
         if (existingIndex >= 0) {
           // 如果接口已存在，更新 method
           const api = prev.accessibleApis[existingIndex]
-          const newMethods = api.method.includes(method)
-            ? api.method.filter(m => m !== method)
-            : [...api.method, method]
+          const newMethods = api.methods.includes(method)
+            ? api.methods.filter(m => m !== method)
+            : [...api.methods, method]
 
           // 如果所有 method 都被移除了，移除整个接口
           if (newMethods.length === 0) {
@@ -106,7 +106,7 @@ export function useRolePermissionSelectors({
 
           // 更新 method
           const newApis = [...prev.accessibleApis]
-          newApis[existingIndex] = { ...api, method: newMethods }
+          newApis[existingIndex] = { ...api, methods: newMethods }
           return { ...prev, accessibleApis: newApis }
         } else {
           // 如果接口不存在，添加接口和 method
@@ -116,7 +116,7 @@ export function useRolePermissionSelectors({
               ...prev.accessibleApis,
               {
                 url,
-                method: [method],
+                methods: [method],
               },
             ],
           }
@@ -166,7 +166,7 @@ export function useRolePermissionSelectors({
             .filter(api => !api.isPublic)
             .map(api => ({
               url: api.url,
-              method: api.method || [],
+              methods: api.methods || [],
             }))
           return {
             ...prev,
@@ -182,7 +182,7 @@ export function useRolePermissionSelectors({
               ...prev,
               accessibleApis: roleApis.map(api => ({
                 url: api.url,
-                method: api.method || [],
+                methods: api.methods || [],
               })),
             }
           } else {
@@ -214,12 +214,13 @@ export function useRolePermissionSelectors({
       setFormData(prev => {
         // 检查所有接口是否都已选中该操作的所有 method
         const allSelected = roleApis.every(api => {
-          const supportedMethods = targetMethods.filter(method => api.method?.includes(method))
+          const supportedMethods = targetMethods.filter(method => api.methods?.includes(method))
           if (supportedMethods.length === 0) return true // 不支持该操作的接口，视为已选中
 
           const selectedApi = prev.accessibleApis.find(a => a.url === api.url)
           if (!selectedApi) return false
-          return supportedMethods.every(method => selectedApi.method.includes(method))
+          const selectedMethods = selectedApi.methods || []
+          return supportedMethods.every(method => selectedMethods.includes(method))
         })
 
         if (allSelected) {
@@ -232,15 +233,17 @@ export function useRolePermissionSelectors({
                 if (!apiDef) return api
 
                 const supportedMethods = targetMethods.filter(method =>
-                  apiDef.method?.includes(method)
+                  apiDef.methods?.includes(method)
                 )
                 if (supportedMethods.length === 0) return api
 
                 // 移除目标方法，但保留公共接口的 method（新增模式）
-                const newMethods = api.method.filter(m => {
+                const currentMethods = api.methods || []
+                const newMethods = currentMethods.filter(m => {
                   if (!editingItem) {
                     const publicApi = publicApis.find(pa => pa.url === api.url)
-                    if (publicApi && publicApi.method.includes(m)) {
+                    const publicMethods = publicApi?.methods || []
+                    if (publicMethods.includes(m)) {
                       return true
                     }
                   }
@@ -250,29 +253,33 @@ export function useRolePermissionSelectors({
                 if (newMethods.length === 0) {
                   return null // 标记为删除
                 }
-                return { ...api, method: newMethods }
+                return { ...api, methods: newMethods }
               })
-              .filter((api): api is typeof api & { url: string; method: string[] } => api !== null),
+              .filter(
+                (api): api is typeof api & { url: string; methods: string[] } => api !== null
+              ),
           }
         } else {
           // 选择：为所有接口添加该操作的方法
           const updatedApis = [...prev.accessibleApis]
 
           roleApis.forEach(apiDef => {
-            const supportedMethods = targetMethods.filter(method => apiDef.method?.includes(method))
+            const supportedMethods = targetMethods.filter(method =>
+              apiDef.methods?.includes(method)
+            )
             if (supportedMethods.length === 0) return
 
             const existingIndex = updatedApis.findIndex(a => a.url === apiDef.url)
             if (existingIndex >= 0) {
               // 更新现有接口
-              const currentMethods = updatedApis[existingIndex].method
+              const currentMethods = updatedApis[existingIndex].methods || []
               const newMethods = [...new Set([...currentMethods, ...supportedMethods])]
-              updatedApis[existingIndex] = { ...updatedApis[existingIndex], method: newMethods }
+              updatedApis[existingIndex] = { ...updatedApis[existingIndex], methods: newMethods }
             } else {
               // 添加新接口
               updatedApis.push({
                 url: apiDef.url,
-                method: supportedMethods,
+                methods: supportedMethods,
               })
             }
           })
