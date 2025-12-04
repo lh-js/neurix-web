@@ -7,12 +7,108 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
-import { DataTable } from '@/components/common/data-table'
+import { DataTable, type DataTableColumn } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { RoleApiFormDialog } from './components/role-api-form-dialog'
 import { BooleanFilter } from '@/components/common/boolean-filter'
+import {
+  CreatePermissionButton,
+  EditPermissionButton,
+  DeletePermissionButton,
+} from '@/components/common/permission-button'
+import { useAuth } from '@/hooks/common/use-auth'
+import type { RoleApi } from '@/service/types/role-api'
 
 export default function RoleApiPage() {
+  const { accessibleElements, pagesLoading } = useAuth()
+  const canEditElements = accessibleElements?.includes('admin-edit-button') ?? false
+  const canDeleteElements = accessibleElements?.includes('admin-delete-button') ?? false
+  const showActionColumn = pagesLoading || canEditElements || canDeleteElements
+
+  const columns: DataTableColumn<RoleApi>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: (item: RoleApi) => <span className="text-muted-foreground">{item.id}</span>,
+    },
+    {
+      key: 'url',
+      header: 'URL',
+      render: (item: RoleApi) => <span className="font-medium">{item.url}</span>,
+    },
+    {
+      key: 'description',
+      header: '描述',
+      render: (item: RoleApi) => item.description,
+    },
+    {
+      key: 'methods',
+      header: 'HTTP 方法',
+      render: (item: RoleApi) => (
+        <div className="flex flex-wrap gap-1">
+          {item.methods && item.methods.length > 0 ? (
+            item.methods.map((method: string) => (
+              <span
+                key={method}
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+              >
+                {method}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm text-muted-foreground">-</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'isPublic',
+      header: '是否公开',
+      render: (item: RoleApi) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            item.isPublic
+              ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+              : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+          }`}
+        >
+          {item.isPublic ? '是' : '否'}
+        </span>
+      ),
+    },
+    {
+      key: 'createTime',
+      header: '创建时间',
+      render: (item: RoleApi) => (
+        <span className="text-sm text-muted-foreground">
+          {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+        </span>
+      ),
+    },
+  ]
+
+  if (showActionColumn) {
+    columns.push({
+      key: 'actions',
+      header: '操作',
+      className: 'text-right',
+      render: (item: RoleApi) => (
+        <div className="flex items-center justify-end gap-2">
+          <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+            <Pencil className="h-4 w-4" />
+          </EditPermissionButton>
+          <DeletePermissionButton
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteClick(item.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </DeletePermissionButton>
+        </div>
+      ),
+    })
+  }
   const {
     data,
     loading,
@@ -70,10 +166,10 @@ export default function RoleApiPage() {
               <Search className="h-4 w-4 mr-2" />
               查询
             </Button>
-            <Button onClick={openCreateDialog}>
+            <CreatePermissionButton onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               新增
-            </Button>
+            </CreatePermissionButton>
           </>
         }
       />
@@ -94,87 +190,7 @@ export default function RoleApiPage() {
       )}
 
       <DataTable
-        columns={[
-          {
-            key: 'id',
-            header: 'ID',
-            render: item => <span className="text-muted-foreground">{item.id}</span>,
-          },
-          {
-            key: 'url',
-            header: 'URL',
-            render: item => <span className="font-medium">{item.url}</span>,
-          },
-          {
-            key: 'description',
-            header: '描述',
-            render: item => item.description,
-          },
-          {
-            key: 'methods',
-            header: 'HTTP 方法',
-            render: item => (
-              <div className="flex flex-wrap gap-1">
-                {item.methods && item.methods.length > 0 ? (
-                  item.methods.map(method => (
-                    <span
-                      key={method}
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                    >
-                      {method}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-muted-foreground">-</span>
-                )}
-              </div>
-            ),
-          },
-          {
-            key: 'isPublic',
-            header: '是否公开',
-            render: item => (
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  item.isPublic
-                    ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                    : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
-                }`}
-              >
-                {item.isPublic ? '是' : '否'}
-              </span>
-            ),
-          },
-          {
-            key: 'createTime',
-            header: '创建时间',
-            render: item => (
-              <span className="text-sm text-muted-foreground">
-                {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
-              </span>
-            ),
-          },
-          {
-            key: 'actions',
-            header: '操作',
-            className: 'text-right',
-            render: item => (
-              <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteClick(item.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+        columns={columns}
         data={data?.list || []}
         loading={loading}
         pagination={

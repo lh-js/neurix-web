@@ -7,12 +7,88 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
-import { DataTable } from '@/components/common/data-table'
+import { DataTable, type DataTableColumn } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { RolePageFormDialog } from './components/role-page-form-dialog'
 import { BooleanFilter } from '@/components/common/boolean-filter'
+import {
+  CreatePermissionButton,
+  EditPermissionButton,
+  DeletePermissionButton,
+} from '@/components/common/permission-button'
+import { useAuth } from '@/hooks/common/use-auth'
+import type { RolePage } from '@/service/types/role-page'
 
 export default function RolePagePage() {
+  const { accessibleElements, pagesLoading } = useAuth()
+  const canEditElements = accessibleElements?.includes('admin-edit-button') ?? false
+  const canDeleteElements = accessibleElements?.includes('admin-delete-button') ?? false
+  const showActionColumn = pagesLoading || canEditElements || canDeleteElements
+
+  const columns: DataTableColumn<RolePage>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: (item: RolePage) => <span className="text-muted-foreground">{item.id}</span>,
+    },
+    {
+      key: 'url',
+      header: 'URL',
+      render: (item: RolePage) => <span className="font-medium">{item.url}</span>,
+    },
+    {
+      key: 'description',
+      header: '描述',
+      render: (item: RolePage) => item.description,
+    },
+    {
+      key: 'isPublic',
+      header: '是否公开',
+      render: (item: RolePage) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            item.isPublic
+              ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+              : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+          }`}
+        >
+          {item.isPublic ? '是' : '否'}
+        </span>
+      ),
+    },
+    {
+      key: 'createTime',
+      header: '创建时间',
+      render: (item: RolePage) => (
+        <span className="text-sm text-muted-foreground">
+          {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+        </span>
+      ),
+    },
+  ]
+
+  if (showActionColumn) {
+    columns.push({
+      key: 'actions',
+      header: '操作',
+      className: 'text-right',
+      render: item => (
+        <div className="flex items-center justify-end gap-2">
+          <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+            <Pencil className="h-4 w-4" />
+          </EditPermissionButton>
+          <DeletePermissionButton
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteClick(item.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </DeletePermissionButton>
+        </div>
+      ),
+    })
+  }
   const {
     data,
     loading,
@@ -67,10 +143,10 @@ export default function RolePagePage() {
               <Search className="h-4 w-4 mr-2" />
               查询
             </Button>
-            <Button onClick={openCreateDialog}>
+            <CreatePermissionButton onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               新增
-            </Button>
+            </CreatePermissionButton>
           </>
         }
       />
@@ -91,67 +167,7 @@ export default function RolePagePage() {
       )}
 
       <DataTable
-        columns={[
-          {
-            key: 'id',
-            header: 'ID',
-            render: item => <span className="text-muted-foreground">{item.id}</span>,
-          },
-          {
-            key: 'url',
-            header: 'URL',
-            render: item => <span className="font-medium">{item.url}</span>,
-          },
-          {
-            key: 'description',
-            header: '描述',
-            render: item => item.description,
-          },
-          {
-            key: 'isPublic',
-            header: '是否公开',
-            render: item => (
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  item.isPublic
-                    ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                    : 'bg-gray-500/10 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
-                }`}
-              >
-                {item.isPublic ? '是' : '否'}
-              </span>
-            ),
-          },
-          {
-            key: 'createTime',
-            header: '创建时间',
-            render: item => (
-              <span className="text-sm text-muted-foreground">
-                {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
-              </span>
-            ),
-          },
-          {
-            key: 'actions',
-            header: '操作',
-            className: 'text-right',
-            render: item => (
-              <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteClick(item.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+        columns={columns}
         data={data?.list || []}
         loading={loading}
         pagination={

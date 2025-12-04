@@ -11,8 +11,83 @@ import { DataTable } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { UserFormDialog } from './components/user-form-dialog'
 import { UserRoleBadge } from './components/user-role-badge'
+import {
+  CreatePermissionButton,
+  EditPermissionButton,
+  DeletePermissionButton,
+} from '@/components/common/permission-button'
+import { useAuth } from '@/hooks/common/use-auth'
 
 export default function UserPage() {
+  const { accessibleElements, pagesLoading } = useAuth()
+  const canEditElements = accessibleElements?.includes('admin-edit-button') ?? false
+  const canDeleteElements = accessibleElements?.includes('admin-delete-button') ?? false
+  const showActionColumn = pagesLoading || canEditElements || canDeleteElements
+
+  const columns = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: item => <span className="text-muted-foreground">{item.id}</span>,
+    },
+    {
+      key: 'email',
+      header: '邮箱',
+      render: item => <span className="font-medium">{item.email}</span>,
+    },
+    {
+      key: 'nickname',
+      header: '昵称',
+      render: item => item.nickname,
+    },
+    {
+      key: 'role',
+      header: '角色',
+      render: item => <UserRoleBadge roleId={item.role} roles={roles} />,
+    },
+    {
+      key: 'tokens',
+      header: 'Token',
+      render: item => item.tokens,
+    },
+    {
+      key: 'usage',
+      header: '使用量',
+      render: item => item.usage,
+    },
+    {
+      key: 'createTime',
+      header: '创建时间',
+      render: item => (
+        <span className="text-sm text-muted-foreground">
+          {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
+        </span>
+      ),
+    },
+  ]
+
+  if (showActionColumn) {
+    columns.push({
+      key: 'actions',
+      header: '操作',
+      className: 'text-right',
+      render: item => (
+        <div className="flex items-center justify-end gap-2">
+          <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+            <Pencil className="h-4 w-4" />
+          </EditPermissionButton>
+          <DeletePermissionButton
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteClick(item.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </DeletePermissionButton>
+        </div>
+      ),
+    })
+  }
   const {
     data,
     loading,
@@ -67,10 +142,10 @@ export default function UserPage() {
               <Search className="h-4 w-4 mr-2" />
               查询
             </Button>
-            <Button onClick={openCreateDialog}>
+            <CreatePermissionButton onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               新增
-            </Button>
+            </CreatePermissionButton>
           </>
         }
       />
@@ -82,67 +157,7 @@ export default function UserPage() {
       )}
 
       <DataTable
-        columns={[
-          {
-            key: 'id',
-            header: 'ID',
-            render: item => <span className="text-muted-foreground">{item.id}</span>,
-          },
-          {
-            key: 'email',
-            header: '邮箱',
-            render: item => <span className="font-medium">{item.email}</span>,
-          },
-          {
-            key: 'nickname',
-            header: '昵称',
-            render: item => item.nickname,
-          },
-          {
-            key: 'role',
-            header: '角色',
-            render: item => <UserRoleBadge roleId={item.role} roles={roles} />,
-          },
-          {
-            key: 'tokens',
-            header: 'Token',
-            render: item => item.tokens,
-          },
-          {
-            key: 'usage',
-            header: '使用量',
-            render: item => item.usage,
-          },
-          {
-            key: 'createTime',
-            header: '创建时间',
-            render: item => (
-              <span className="text-sm text-muted-foreground">
-                {item.createTime ? new Date(item.createTime).toLocaleString('zh-CN') : '-'}
-              </span>
-            ),
-          },
-          {
-            key: 'actions',
-            header: '操作',
-            className: 'text-right',
-            render: item => (
-              <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteClick(item.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+        columns={columns}
         data={data?.list || []}
         loading={loading}
         pagination={

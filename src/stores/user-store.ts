@@ -6,6 +6,7 @@ class UserStore {
   loading = false
   initialized = false
   accessiblePages: string[] = []
+  accessibleElements: string[] = []
   pagesLoading = false
   pagesInitialized = false
 

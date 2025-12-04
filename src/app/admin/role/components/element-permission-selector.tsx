@@ -24,8 +24,7 @@ export function ElementPermissionSelector({
 }: ElementPermissionSelectorProps) {
   const allSelectableKeys = elements.map(element => element.key)
   const allSelected =
-    allSelectableKeys.length > 0 &&
-    allSelectableKeys.every(key => selectedElements.includes(key))
+    allSelectableKeys.length > 0 && allSelectableKeys.every(key => selectedElements.includes(key))
 
   return (
     <div className="space-y-2">
@@ -88,4 +87,3 @@ export function ElementPermissionSelector({
     </div>
   )
 }
-

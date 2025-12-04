@@ -9,9 +9,16 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
-import { DataTable } from '@/components/common/data-table'
+import { DataTable, type DataTableColumn } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { RoleFormDialog } from './components/role-form-dialog'
+import {
+  CreatePermissionButton,
+  EditPermissionButton,
+  DeletePermissionButton,
+} from '@/components/common/permission-button'
+import { useAuth } from '@/hooks/common/use-auth'
+import type { Role } from '@/service/types/role'
 
 export default function RolePage() {
   const {
@@ -96,6 +103,88 @@ export default function RolePage() {
     return new Date(time).toLocaleString('zh-CN')
   }
 
+  const { accessibleElements, pagesLoading } = useAuth()
+  const canEditElements = accessibleElements?.includes('admin-edit-button') ?? false
+  const canDeleteElements = accessibleElements?.includes('admin-delete-button') ?? false
+  const showActionColumn = pagesLoading || canEditElements || canDeleteElements
+
+  const columns: DataTableColumn<Role>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      render: (item: Role) => <span className="text-muted-foreground">{item.id}</span>,
+    },
+    {
+      key: 'name',
+      header: '名称',
+      render: (item: Role) => <span className="font-medium">{item.name}</span>,
+    },
+    {
+      key: 'description',
+      header: '描述',
+      render: (item: Role) => item.description,
+    },
+    {
+      key: 'level',
+      header: '等级',
+      render: (item: Role) => item.level,
+    },
+    {
+      key: 'accessiblePages',
+      header: '可访问页面',
+      render: (item: Role) =>
+        item.accessiblePages && item.accessiblePages.length > 0
+          ? `${item.accessiblePages.length} 个`
+          : '-',
+    },
+    {
+      key: 'accessibleApis',
+      header: '可访问接口',
+      render: (item: Role) =>
+        item.accessibleApis && item.accessibleApis.length > 0
+          ? `${item.accessibleApis.length} 个`
+          : '-',
+    },
+    {
+      key: 'accessibleElements',
+      header: '可访问元素',
+      render: (item: Role) =>
+        item.accessibleElements && item.accessibleElements.length > 0
+          ? `${item.accessibleElements.length} 个`
+          : '-',
+    },
+    {
+      key: 'createTime',
+      header: '创建时间',
+      render: (item: Role) => (
+        <span className="text-sm text-muted-foreground">{formatTime(item.createTime)}</span>
+      ),
+    },
+  ]
+
+  if (showActionColumn) {
+    columns.push({
+      key: 'actions',
+      header: '操作',
+      className: 'text-right',
+      render: item => (
+        <div className="flex items-center justify-end gap-2">
+          <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
+            <Pencil className="h-4 w-4" />
+          </EditPermissionButton>
+          <DeletePermissionButton
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteClick(item.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </DeletePermissionButton>
+        </div>
+      ),
+    })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -107,10 +196,10 @@ export default function RolePage() {
               <Search className="h-4 w-4 mr-2" />
               查询
             </Button>
-            <Button onClick={openCreateDialog}>
+            <CreatePermissionButton onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               新增
-            </Button>
+            </CreatePermissionButton>
           </>
         }
       />
@@ -124,79 +213,7 @@ export default function RolePage() {
 
       {/* 数据表格 */}
       <DataTable
-        columns={[
-          {
-            key: 'id',
-            header: 'ID',
-            render: item => <span className="text-muted-foreground">{item.id}</span>,
-          },
-          {
-            key: 'name',
-            header: '名称',
-            render: item => <span className="font-medium">{item.name}</span>,
-          },
-          {
-            key: 'description',
-            header: '描述',
-            render: item => item.description,
-          },
-          {
-            key: 'level',
-            header: '等级',
-            render: item => item.level,
-          },
-          {
-            key: 'accessiblePages',
-            header: '可访问页面',
-            render: item =>
-              item.accessiblePages && item.accessiblePages.length > 0
-                ? `${item.accessiblePages.length} 个`
-                : '-',
-          },
-          {
-            key: 'accessibleApis',
-            header: '可访问接口',
-            render: item =>
-              item.accessibleApis && item.accessibleApis.length > 0
-                ? `${item.accessibleApis.length} 个`
-                : '-',
-          },
-          {
-            key: 'accessibleElements',
-            header: '可访问元素',
-            render: item =>
-              item.accessibleElements && item.accessibleElements.length > 0
-                ? `${item.accessibleElements.length} 个`
-                : '-',
-          },
-          {
-            key: 'createTime',
-            header: '创建时间',
-            render: item => (
-              <span className="text-sm text-muted-foreground">{formatTime(item.createTime)}</span>
-            ),
-          },
-          {
-            key: 'actions',
-            header: '操作',
-            className: 'text-right',
-            render: item => (
-              <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteClick(item.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+        columns={columns}
         data={data?.list || []}
         loading={loading}
         pagination={

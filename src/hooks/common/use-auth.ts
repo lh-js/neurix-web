@@ -62,11 +62,13 @@ export function useAuth() {
     try {
       const response = await getAccessibleResources()
       const pages = [...(response.accessiblePages || [])]
+      const elements = response.accessibleElements || []
       if (!pages.includes(LOGIN_PATH)) {
         pages.push(LOGIN_PATH)
       }
       runInAction(() => {
         userStore.accessiblePages = pages
+        userStore.accessibleElements = elements
         userStore.pagesLoading = false
       })
     } catch (error) {
@@ -74,6 +76,7 @@ export function useAuth() {
       // 即使接口失败，也至少保证 login 页面可访问
       runInAction(() => {
         userStore.accessiblePages = [LOGIN_PATH]
+        userStore.accessibleElements = []
         userStore.pagesLoading = false
       })
     }
@@ -118,6 +121,7 @@ export function useAuth() {
     runInAction(() => {
       userStore.user = null
       userStore.accessiblePages = []
+      userStore.accessibleElements = []
       userStore.pagesInitialized = false
     })
     if (typeof window !== 'undefined') {
@@ -130,6 +134,7 @@ export function useAuth() {
     loading: userStore.loading,
     initialized: userStore.initialized,
     accessiblePages: userStore.accessiblePages,
+    accessibleElements: userStore.accessibleElements,
     pagesLoading: userStore.pagesLoading,
     pagesInitialized: userStore.pagesInitialized,
     fetchUserInfo,

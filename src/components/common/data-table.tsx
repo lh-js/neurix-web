@@ -20,7 +20,7 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination'
 
-interface DataTableColumn<T> {
+export interface DataTableColumn<T> {
   key: string
   header: string
   render: (item: T) => ReactNode
