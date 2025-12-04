@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { Role, CreateRoleRequest } from '@/service/types/role'
-import type { RoleApi } from '@/service/types/role-api'
 import type { AccessibleApi } from '@/service/types/role'
 
 interface UseRoleFormProps {
@@ -10,7 +9,6 @@ interface UseRoleFormProps {
   handleUpdate: (id: number, data: CreateRoleRequest) => Promise<void>
   publicPages: string[]
   publicApis: AccessibleApi[]
-  roleApis: RoleApi[]
 }
 
 /**
@@ -22,7 +20,6 @@ export function useRoleForm({
   handleUpdate,
   publicPages,
   publicApis,
-  roleApis,
 }: UseRoleFormProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Role | null>(null)
