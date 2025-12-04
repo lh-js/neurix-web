@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
+import { useEffect, useState, createContext, useContext, ReactNode, useRef } from 'react'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 
@@ -33,6 +33,7 @@ function applyTheme(theme: ThemeMode) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('system')
+  const isFirstMount = useRef(true)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -75,6 +76,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      return
+    }
     applyTheme(theme)
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(STORAGE_KEY, theme)

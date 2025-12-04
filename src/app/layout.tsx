@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="h-screen flex flex-col bg-background">
+      <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -50,6 +50,8 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body className="h-screen flex flex-col bg-background">
         <ThemeProvider>
           <ConditionalLayout>{children}</ConditionalLayout>
           <ThemedToaster />
