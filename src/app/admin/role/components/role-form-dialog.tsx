@@ -16,9 +16,11 @@ import { Spinner } from '@/components/ui/spinner'
 import type { CreateRoleRequest } from '@/service/types/role'
 import { PagePermissionSelector } from './page-permission-selector'
 import { ApiPermissionSelector } from './api-permission-selector'
+import { ElementPermissionSelector } from './element-permission-selector'
 import type { RolePage } from '@/service/types/role-page'
 import type { RoleApi } from '@/service/types/role-api'
 import type { AccessibleApi } from '@/service/types/role'
+import type { RoleElement } from '@/service/types/role-element'
 
 type CrudOperation = 'create' | 'read' | 'update' | 'delete'
 
@@ -45,6 +47,11 @@ interface RoleFormDialogProps {
   onToggleMethod: (url: string, method: string) => void
   onToggleAllApis: (checked: boolean | 'indeterminate') => void
   onCrudOperationChange: (operation: CrudOperation) => void
+  // 元素权限相关
+  roleElements: RoleElement[]
+  elementsLoading?: boolean
+  onToggleElement: (key: string) => void
+  onToggleAllElements: (checked: boolean | 'indeterminate') => void
 }
 
 export function RoleFormDialog({
@@ -68,8 +75,12 @@ export function RoleFormDialog({
   onToggleMethod,
   onToggleAllApis,
   onCrudOperationChange,
+  roleElements,
+  elementsLoading = false,
+  onToggleElement,
+  onToggleAllElements,
 }: RoleFormDialogProps) {
-  const permissionsLoading = pagesLoading || apisLoading
+  const permissionsLoading = pagesLoading || apisLoading || elementsLoading
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,6 +152,14 @@ export function RoleFormDialog({
               onToggleMethod={onToggleMethod}
               onToggleAll={onToggleAllApis}
               onCrudOperationChange={onCrudOperationChange}
+            />
+            <ElementPermissionSelector
+              elements={roleElements}
+              selectedElements={formData.accessibleElements}
+              loading={permissionsLoading}
+              disabled={loading}
+              onToggleElement={onToggleElement}
+              onToggleAll={onToggleAllElements}
             />
           </div>
         )}

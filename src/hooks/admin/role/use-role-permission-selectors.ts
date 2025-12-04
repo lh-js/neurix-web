@@ -3,6 +3,7 @@ import type { CreateRoleRequest } from '@/service/types/role'
 import type { RolePage } from '@/service/types/role-page'
 import type { RoleApi } from '@/service/types/role-api'
 import type { AccessibleApi } from '@/service/types/role'
+import type { RoleElement } from '@/service/types/role-element'
 
 type CrudOperation = 'create' | 'read' | 'update' | 'delete'
 
@@ -11,6 +12,7 @@ interface UseRolePermissionSelectorsProps {
   editingItem: { id: number } | null
   rolePages: RolePage[]
   roleApis: RoleApi[]
+  roleElements: RoleElement[]
   publicPages: string[]
   publicApis: AccessibleApi[]
 }
@@ -23,6 +25,7 @@ export function useRolePermissionSelectors({
   editingItem,
   rolePages,
   roleApis,
+  roleElements,
   publicPages,
   publicApis,
 }: UseRolePermissionSelectorsProps) {
@@ -291,6 +294,34 @@ export function useRolePermissionSelectors({
     [editingItem, roleApis, publicApis, setFormData]
   )
 
+  // 切换元素权限
+  const toggleElementKey = useCallback(
+    (key: string) => {
+      setFormData(prev => {
+        const exists = prev.accessibleElements.includes(key)
+        return {
+          ...prev,
+          accessibleElements: exists
+            ? prev.accessibleElements.filter(item => item !== key)
+            : [...prev.accessibleElements, key],
+        }
+      })
+    },
+    [setFormData]
+  )
+
+  // 全选/取消全选元素权限
+  const toggleAllElements = useCallback(
+    (checked: boolean | 'indeterminate') => {
+      if (checked === 'indeterminate') return
+      setFormData(prev => ({
+        ...prev,
+        accessibleElements: checked ? roleElements.map(element => element.key) : [],
+      }))
+    },
+    [roleElements, setFormData]
+  )
+
   return {
     togglePageUrl,
     toggleApiUrl,
@@ -298,5 +329,7 @@ export function useRolePermissionSelectors({
     toggleAllPages,
     toggleAllApis,
     toggleAllCrudOperation,
+    toggleElementKey,
+    toggleAllElements,
   }
 }

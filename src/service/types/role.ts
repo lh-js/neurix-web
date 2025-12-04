@@ -16,6 +16,7 @@ export interface Role {
   level: number
   accessiblePages: string[] | null
   accessibleApis: AccessibleApi[] | null
+  accessibleElements: string[] | null
   createTime: string
 }
 
@@ -28,6 +29,7 @@ export interface CreateRoleRequest {
   level: number
   accessiblePages: string[]
   accessibleApis: AccessibleApi[]
+  accessibleElements: string[]
 }
 
 /**
@@ -39,6 +41,7 @@ export interface UpdateRoleRequest {
   level?: number
   accessiblePages?: string[]
   accessibleApis?: AccessibleApi[]
+  accessibleElements?: string[]
 }
 
 /**

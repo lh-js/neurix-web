@@ -27,7 +27,16 @@ export default function RolePage() {
   } = useRole()
 
   // 权限数据管理
-  const { rolePages, roleApis, publicPages, publicApis, permissionsLoading } = useRolePermissions()
+  const {
+    rolePages,
+    roleApis,
+    roleElements,
+    publicPages,
+    publicApis,
+    rolePagesLoading,
+    roleApisLoading,
+    roleElementsLoading,
+  } = useRolePermissions()
 
   // 表单管理
   const {
@@ -57,11 +66,14 @@ export default function RolePage() {
     toggleAllPages,
     toggleAllApis,
     toggleAllCrudOperation,
+    toggleElementKey,
+    toggleAllElements,
   } = useRolePermissionSelectors({
     setFormData,
     editingItem,
     rolePages,
     roleApis,
+    roleElements,
     publicPages,
     publicApis,
   })
@@ -150,6 +162,14 @@ export default function RolePage() {
                 : '-',
           },
           {
+            key: 'accessibleElements',
+            header: '可访问元素',
+            render: item =>
+              item.accessibleElements && item.accessibleElements.length > 0
+                ? `${item.accessibleElements.length} 个`
+                : '-',
+          },
+          {
             key: 'createTime',
             header: '创建时间',
             render: item => (
@@ -207,16 +227,20 @@ export default function RolePage() {
         submitting={submitting}
         rolePages={rolePages}
         publicPages={publicPages}
-        pagesLoading={permissionsLoading}
+        pagesLoading={rolePagesLoading}
         onTogglePage={togglePageUrl}
         onToggleAllPages={toggleAllPages}
         roleApis={roleApis}
         publicApis={publicApis}
-        apisLoading={permissionsLoading}
+        apisLoading={roleApisLoading}
         onToggleApi={toggleApiUrl}
         onToggleMethod={toggleApiMethod}
         onToggleAllApis={toggleAllApis}
         onCrudOperationChange={toggleAllCrudOperation}
+        roleElements={roleElements}
+        elementsLoading={roleElementsLoading}
+        onToggleElement={toggleElementKey}
+        onToggleAllElements={toggleAllElements}
       />
 
       {/* 删除确认对话框 */}

@@ -29,6 +29,7 @@ export function useRoleForm({
     level: 0,
     accessiblePages: [],
     accessibleApis: [],
+    accessibleElements: [],
   })
   const [dialogLoading, setDialogLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -55,6 +56,7 @@ export function useRoleForm({
         url: api.url,
         methods: api.methods || [],
       })), // 默认选中所有公共接口（包含所有 method）
+      accessibleElements: [],
     })
     setIsDialogOpen(true)
   }
@@ -73,6 +75,7 @@ export function useRoleForm({
         level: role.level,
         accessiblePages: role.accessiblePages || [],
         accessibleApis: convertAccessibleApis(role.accessibleApis),
+        accessibleElements: role.accessibleElements || [],
       })
       setEditingItem(role)
     } catch {
@@ -83,6 +86,7 @@ export function useRoleForm({
         level: item.level,
         accessiblePages: item.accessiblePages || [],
         accessibleApis: convertAccessibleApis(item.accessibleApis),
+        accessibleElements: item.accessibleElements || [],
       })
       toast.error('获取详情失败，使用列表数据')
     } finally {

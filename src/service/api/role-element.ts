@@ -55,3 +55,11 @@ export async function updateRoleElement(
 export async function deleteRoleElement(id: number): Promise<void> {
   await del(`/role-element/${id}`)
 }
+
+/**
+ * 获取所有元素权限（不分页）
+ */
+export async function getAllRoleElements(): Promise<RoleElement[]> {
+  const response = await get<RoleElement[]>('/role-element/all')
+  return response
+}
