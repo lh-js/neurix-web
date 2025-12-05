@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { login } from '@/service/api/auth'
 import { setToken } from '@/utils/auth.util'
-import { DEFAULT_LOGIN_REDIRECT } from '@/config/auth.config'
+
+/**
+ * 获取URL中的查询参数
+ */
+function getQueryParam(param: string): string | null {
+  if (typeof window === 'undefined') return null
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get(param)
+}
 
 interface LoginFormData {
   email: string
@@ -36,11 +44,13 @@ export function useLogin() {
         }
       }
 
-      // 跳转到默认页面
+      // 跳转到来源页面或默认页面
       // 使用 window.location.href 强制刷新页面，页面刷新后会自动获取用户信息和可访问页面
       // 这样避免重复调用接口
       if (typeof window !== 'undefined') {
-        window.location.href = DEFAULT_LOGIN_REDIRECT
+        // 从URL参数获取重定向地址，如果没有则默认为/
+        const redirectTo = getQueryParam('redirect') || '/'
+        window.location.href = redirectTo
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '登录失败，请检查邮箱和密码'

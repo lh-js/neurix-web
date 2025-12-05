@@ -66,6 +66,10 @@ export function useAuth() {
       if (!pages.includes(LOGIN_PATH)) {
         pages.push(LOGIN_PATH)
       }
+      // 添加根路径/作为保底页面
+      if (!pages.includes('/')) {
+        pages.push('/')
+      }
       runInAction(() => {
         userStore.accessiblePages = pages
         userStore.accessibleElements = elements
@@ -73,9 +77,9 @@ export function useAuth() {
       })
     } catch (error) {
       console.error('获取可访问资源失败:', error)
-      // 即使接口失败，也至少保证 login 页面可访问
+      // 即使接口失败，也至少保证 login 页面和根页面可访问
       runInAction(() => {
-        userStore.accessiblePages = [LOGIN_PATH]
+        userStore.accessiblePages = [LOGIN_PATH, '/']
         userStore.accessibleElements = []
         userStore.pagesLoading = false
       })
@@ -125,7 +129,10 @@ export function useAuth() {
       userStore.pagesInitialized = false
     })
     if (typeof window !== 'undefined') {
-      window.location.href = LOGIN_PATH
+      // 记录当前页面作为重定向参数
+      const currentPath = window.location.pathname
+      const redirectUrl = currentPath !== LOGIN_PATH ? `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}` : LOGIN_PATH
+      window.location.href = redirectUrl
     }
   }
 
