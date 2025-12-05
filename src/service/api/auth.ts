@@ -10,6 +10,8 @@ import {
   VerifyEmailCodeResponse,
   RegisterRequest,
   RegisterResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
 } from '../types/auth'
 
 /**
@@ -67,5 +69,13 @@ export async function verifyEmailCode(data: VerifyEmailCodeRequest): Promise<Ver
  */
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
   const response = await post<RegisterResponse>('/user/register', data)
+  return response
+}
+
+/**
+ * 修改密码 API
+ */
+export async function changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+  const response = await post<ChangePasswordResponse>('/user/change-password', data)
   return response
 }

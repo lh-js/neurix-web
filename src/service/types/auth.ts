@@ -78,3 +78,19 @@ export interface RegisterRequest {
 export interface RegisterResponse {
   message: string
 }
+
+/**
+ * 修改密码请求参数
+ */
+export interface ChangePasswordRequest {
+  email: string
+  newPassword: string
+  verificationToken: string
+}
+
+/**
+ * 修改密码响应数据
+ */
+export interface ChangePasswordResponse {
+  message: string
+}

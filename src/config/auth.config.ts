@@ -12,6 +12,7 @@ export const LOGIN_PATH = '/login'
 export const minimalLayoutRoutes = [
   '/login',
   '/register',
+  '/forgot-password',
   // 可以在这里添加更多不需要 header/footer 的页面
 ]
 
