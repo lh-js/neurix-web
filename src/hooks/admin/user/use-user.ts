@@ -23,10 +23,12 @@ export function useUserList() {
     try {
       const response = await getUserList({ page, pageSize })
       setData(response)
+      return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '获取用户列表失败'
       setError(errorMessage)
       console.error('获取用户列表失败:', err)
+      throw err
     } finally {
       setLoading(false)
       fetchingRef.current = false
@@ -84,7 +86,17 @@ export function useUserList() {
   const handleDelete = async (id: number) => {
     try {
       await deleteUser(id)
-      await fetchList()
+
+      // 先获取当前页的最新数据，检查是否还有数据
+      const response = await getUserList({ page, pageSize })
+
+      // 如果当前页没有数据且不是第一页，跳转到上一页
+      if (response.list.length === 0 && page > 1) {
+        setPage(page - 1)
+      } else {
+        // 否则更新当前页数据
+        setData(response)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '删除用户失败'
       setError(errorMessage)

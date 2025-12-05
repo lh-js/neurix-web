@@ -45,10 +45,12 @@ export function useRoleApi() {
         isPublic: isPublicParam,
       })
       setData(response)
+      return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '获取接口权限列表失败'
       setError(errorMessage)
       console.error('获取接口权限列表失败:', err)
+      throw err
     } finally {
       setLoading(false)
       fetchingRef.current = false
@@ -98,8 +100,25 @@ export function useRoleApi() {
   const handleDelete = async (id: number) => {
     try {
       await deleteRoleApi(id)
-      // 删除成功后刷新列表
-      await fetchList()
+
+      // 先获取当前页的最新数据，检查是否还有数据
+      let isPublicParam: boolean | undefined
+      if (filterIsPublic === 'true') isPublicParam = true
+      if (filterIsPublic === 'false') isPublicParam = false
+
+      const response = await getRoleApiList({
+        page,
+        pageSize,
+        isPublic: isPublicParam,
+      })
+
+      // 如果当前页没有数据且不是第一页，跳转到上一页
+      if (response.list.length === 0 && page > 1) {
+        setPage(page - 1)
+      } else {
+        // 否则更新当前页数据
+        setData(response)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '删除接口权限失败'
       setError(errorMessage)
