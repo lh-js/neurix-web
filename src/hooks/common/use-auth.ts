@@ -88,34 +88,23 @@ export function useAuth() {
 
   // 自动初始化（只在客户端调用，且只初始化一次）
   useEffect(() => {
-    if (userStore.initialized || typeof window === 'undefined') {
+    if ((userStore.initialized && userStore.pagesInitialized) || typeof window === 'undefined') {
       return
     }
 
     runInAction(() => {
       userStore.initialized = true
+      userStore.pagesInitialized = true
     })
+
+    // 页面加载时获取一次可访问资源（无论是否登录）
+    fetchAccessibleResources()
 
     // 如果有 token 且还没有用户信息，自动获取用户信息（页面刷新后也能保持）
     // 如果已经有用户信息，说明已经获取过了，不需要重复获取
     if (isAuthenticated() && !userStore.user) {
       fetchUserInfo()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // 自动获取可访问资源（只在客户端调用，且只初始化一次，无论是否登录都会请求）
-  useEffect(() => {
-    if (userStore.pagesInitialized || typeof window === 'undefined') {
-      return
-    }
-
-    runInAction(() => {
-      userStore.pagesInitialized = true
-    })
-
-    // 页面加载时获取一次可访问资源（无论是否登录）
-    fetchAccessibleResources()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -1,5 +1,16 @@
 import { post, get } from '../request'
-import { LoginRequest, LoginResponse, UserInfo, AccessibleResourcesResponse } from '../types/auth'
+import {
+  LoginRequest,
+  LoginResponse,
+  UserInfo,
+  AccessibleResourcesResponse,
+  SendEmailCodeRequest,
+  SendEmailCodeResponse,
+  VerifyEmailCodeRequest,
+  VerifyEmailCodeResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from '../types/auth'
 
 /**
  * 登录 API
@@ -32,5 +43,29 @@ export async function getUserInfo(): Promise<UserInfo> {
  */
 export async function getAccessibleResources(): Promise<AccessibleResourcesResponse> {
   const response = await get<AccessibleResourcesResponse>('/auth/accessible-resources')
+  return response
+}
+
+/**
+ * 发送邮箱验证码 API
+ */
+export async function sendEmailCode(data: SendEmailCodeRequest): Promise<SendEmailCodeResponse> {
+  const response = await post<SendEmailCodeResponse>('/email-code/send-code', data)
+  return response
+}
+
+/**
+ * 验证邮箱验证码 API
+ */
+export async function verifyEmailCode(data: VerifyEmailCodeRequest): Promise<VerifyEmailCodeResponse> {
+  const response = await post<VerifyEmailCodeResponse>('/email-code/verify-code', data)
+  return response
+}
+
+/**
+ * 用户注册 API
+ */
+export async function register(data: RegisterRequest): Promise<RegisterResponse> {
+  const response = await post<RegisterResponse>('/user/register', data)
   return response
 }

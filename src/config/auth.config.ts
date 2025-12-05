@@ -11,6 +11,7 @@ export const LOGIN_PATH = '/login'
 // 不显示 header 和 footer 的页面（这些页面会使用最小化布局）
 export const minimalLayoutRoutes = [
   '/login',
+  '/register',
   // 可以在这里添加更多不需要 header/footer 的页面
 ]
 

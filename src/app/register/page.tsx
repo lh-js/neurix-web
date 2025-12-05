@@ -1,24 +1,21 @@
 'use client'
 
-import { LoginForm } from './components/login-form'
-import { useLogin } from '@/hooks/login/use-login'
+import { RegisterForm } from './components/register-form'
 
-export default function LoginPage() {
-  const { loading, error, handleLogin } = useLogin()
-
+export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/50">
       <div className="w-full max-w-md">
-        <LoginForm onSubmit={handleLogin} loading={loading} error={error} />
+        <RegisterForm />
 
         {/* Footer Text */}
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          还没有账号？{' '}
+          已有账号？{' '}
           <a
-            href="/register"
+            href="/login"
             className="font-medium text-primary hover:text-primary/80 underline underline-offset-4"
           >
-            去注册
+            去登录
           </a>
         </p>
       </div>
