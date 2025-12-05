@@ -32,12 +32,15 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     nickname: '',
   })
 
+  // 跟踪验证码是否已发送
+  const [codeSent, setCodeSent] = useState(false)
+
   // 计算当前步骤
   const step = useMemo(() => {
     if (verificationToken) return 'register'
-    if (formData.code) return 'verify'
+    if (codeSent || formData.code) return 'verify'
     return 'email'
-  }, [verificationToken, formData.code])
+  }, [verificationToken, codeSent, formData.code])
 
   // 组件卸载时清理
   useEffect(() => {
@@ -50,7 +53,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     e.preventDefault()
     try {
       await handleSendCode(formData.email)
-      // step will be updated automatically via useMemo
+      setCodeSent(true) // 标记验证码已发送
     } catch {
       // 错误已在hook中处理
     }
@@ -78,6 +81,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const handleBackToEmail = () => {
     setFormData(prev => ({ ...prev, code: '' }))
+    setCodeSent(false) // 重置验证码发送状态
   }
 
   const handleBackToVerify = () => {
