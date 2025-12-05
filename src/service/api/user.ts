@@ -5,6 +5,8 @@ import {
   UserListResponse,
   CreateUserRequest,
   UpdateUserRequest,
+  AdminChangePasswordRequest,
+  AdminChangePasswordResponse,
 } from '../types/user'
 
 /**
@@ -47,4 +49,14 @@ export async function updateUser(id: number, data: UpdateUserRequest): Promise<U
  */
 export async function deleteUser(id: number): Promise<void> {
   await del(`/user/${id}`)
+}
+
+/**
+ * 管理员修改用户密码
+ */
+export async function adminChangePassword(
+  data: AdminChangePasswordRequest
+): Promise<AdminChangePasswordResponse> {
+  const response = await post<AdminChangePasswordResponse>('/user/change-password-admin', data)
+  return response
 }

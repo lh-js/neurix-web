@@ -99,6 +99,7 @@ function AuthGuardComponent({ children }: AuthGuardProps) {
   }, [
     pathname,
     router,
+    searchParams,
     user,
     loading,
     initialized,

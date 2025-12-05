@@ -59,7 +59,9 @@ export async function sendEmailCode(data: SendEmailCodeRequest): Promise<SendEma
 /**
  * 验证邮箱验证码 API
  */
-export async function verifyEmailCode(data: VerifyEmailCodeRequest): Promise<VerifyEmailCodeResponse> {
+export async function verifyEmailCode(
+  data: VerifyEmailCodeRequest
+): Promise<VerifyEmailCodeResponse> {
   const response = await post<VerifyEmailCodeResponse>('/email-code/verify-code', data)
   return response
 }

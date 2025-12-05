@@ -50,3 +50,18 @@ export interface UserListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
+
+/**
+ * 管理员修改密码请求参数
+ */
+export interface AdminChangePasswordRequest {
+  userId: number
+  newPassword: string
+}
+
+/**
+ * 管理员修改密码响应数据
+ */
+export interface AdminChangePasswordResponse {
+  message: string
+}

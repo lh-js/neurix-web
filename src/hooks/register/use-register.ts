@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
 import { sendEmailCode, verifyEmailCode, register } from '@/service/api/auth'
-import { setToken } from '@/utils/auth.util'
 import { SendEmailCodeRequest, VerifyEmailCodeRequest, RegisterRequest } from '@/service/types/auth'
 
 export interface RegisterFormData {
@@ -25,7 +24,7 @@ export function useRegister() {
   const startCountdown = useCallback(() => {
     setCountdown(60)
     countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           if (countdownRef.current) {
             clearInterval(countdownRef.current)
@@ -48,26 +47,29 @@ export function useRegister() {
   }, [])
 
   // 发送邮箱验证码
-  const handleSendCode = useCallback(async (email: string) => {
-    if (!email) {
-      throw new Error('请输入邮箱地址')
-    }
+  const handleSendCode = useCallback(
+    async (email: string) => {
+      if (!email) {
+        throw new Error('请输入邮箱地址')
+      }
 
-    setError('')
-    setSendCodeLoading(true)
+      setError('')
+      setSendCodeLoading(true)
 
-    try {
-      const request: SendEmailCodeRequest = { email }
-      await sendEmailCode(request)
-      startCountdown()
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '发送验证码失败，请重试'
-      setError(errorMessage)
-      throw err
-    } finally {
-      setSendCodeLoading(false)
-    }
-  }, [startCountdown])
+      try {
+        const request: SendEmailCodeRequest = { email }
+        await sendEmailCode(request)
+        startCountdown()
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '发送验证码失败，请重试'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setSendCodeLoading(false)
+      }
+    },
+    [startCountdown]
+  )
 
   // 验证邮箱验证码
   const handleVerifyCode = useCallback(async (email: string, code: string) => {
@@ -93,44 +95,47 @@ export function useRegister() {
   }, [])
 
   // 用户注册
-  const handleRegister = useCallback(async (formData: RegisterFormData) => {
-    if (!formData.email || !formData.password || !formData.nickname || !formData.code) {
-      throw new Error('请填写所有必填字段')
-    }
-
-    if (!verificationToken) {
-      throw new Error('请先验证邮箱验证码')
-    }
-
-    setError('')
-    setLoading(true)
-
-    try {
-      const request: RegisterRequest = {
-        email: formData.email,
-        password: formData.password,
-        nickname: formData.nickname,
-        verificationToken,
+  const handleRegister = useCallback(
+    async (formData: RegisterFormData) => {
+      if (!formData.email || !formData.password || !formData.nickname || !formData.code) {
+        throw new Error('请填写所有必填字段')
       }
 
-      await register(request)
-
-      // 清理状态
-      clearCountdown()
-      setVerificationToken('')
-
-      // 跳转到登录页面
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
+      if (!verificationToken) {
+        throw new Error('请先验证邮箱验证码')
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '注册失败，请重试'
-      setError(errorMessage)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [verificationToken, clearCountdown])
+
+      setError('')
+      setLoading(true)
+
+      try {
+        const request: RegisterRequest = {
+          email: formData.email,
+          password: formData.password,
+          nickname: formData.nickname,
+          verificationToken,
+        }
+
+        await register(request)
+
+        // 清理状态
+        clearCountdown()
+        setVerificationToken('')
+
+        // 跳转到登录页面
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '注册失败，请重试'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [verificationToken, clearCountdown]
+  )
 
   // 清理函数（组件卸载时调用）
   const cleanup = useCallback(() => {

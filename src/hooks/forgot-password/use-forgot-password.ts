@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef } from 'react'
 import { sendEmailCode, verifyEmailCode, changePassword } from '@/service/api/auth'
-import { SendEmailCodeRequest, VerifyEmailCodeRequest, ChangePasswordRequest } from '@/service/types/auth'
+import {
+  SendEmailCodeRequest,
+  VerifyEmailCodeRequest,
+  ChangePasswordRequest,
+} from '@/service/types/auth'
 
 export interface ForgotPasswordFormData {
   email: string
@@ -23,7 +27,7 @@ export function useForgotPassword() {
   const startCountdown = useCallback(() => {
     setCountdown(60)
     countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           if (countdownRef.current) {
             clearInterval(countdownRef.current)
@@ -46,26 +50,29 @@ export function useForgotPassword() {
   }, [])
 
   // 发送邮箱验证码
-  const handleSendCode = useCallback(async (email: string) => {
-    if (!email) {
-      throw new Error('请输入邮箱地址')
-    }
+  const handleSendCode = useCallback(
+    async (email: string) => {
+      if (!email) {
+        throw new Error('请输入邮箱地址')
+      }
 
-    setError('')
-    setSendCodeLoading(true)
+      setError('')
+      setSendCodeLoading(true)
 
-    try {
-      const request: SendEmailCodeRequest = { email }
-      await sendEmailCode(request)
-      startCountdown()
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '发送验证码失败，请重试'
-      setError(errorMessage)
-      throw err
-    } finally {
-      setSendCodeLoading(false)
-    }
-  }, [startCountdown])
+      try {
+        const request: SendEmailCodeRequest = { email }
+        await sendEmailCode(request)
+        startCountdown()
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '发送验证码失败，请重试'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setSendCodeLoading(false)
+      }
+    },
+    [startCountdown]
+  )
 
   // 验证邮箱验证码
   const handleVerifyCode = useCallback(async (email: string, code: string) => {
@@ -91,43 +98,46 @@ export function useForgotPassword() {
   }, [])
 
   // 修改密码
-  const handleChangePassword = useCallback(async (formData: ForgotPasswordFormData) => {
-    if (!formData.email || !formData.newPassword || !formData.code) {
-      throw new Error('请填写所有必填字段')
-    }
-
-    if (!verificationToken) {
-      throw new Error('请先验证邮箱验证码')
-    }
-
-    setError('')
-    setLoading(true)
-
-    try {
-      const request: ChangePasswordRequest = {
-        email: formData.email,
-        newPassword: formData.newPassword,
-        verificationToken,
+  const handleChangePassword = useCallback(
+    async (formData: ForgotPasswordFormData) => {
+      if (!formData.email || !formData.newPassword || !formData.code) {
+        throw new Error('请填写所有必填字段')
       }
 
-      await changePassword(request)
-
-      // 清理状态
-      clearCountdown()
-      setVerificationToken('')
-
-      // 跳转到登录页面
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
+      if (!verificationToken) {
+        throw new Error('请先验证邮箱验证码')
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '修改密码失败，请重试'
-      setError(errorMessage)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [verificationToken, clearCountdown])
+
+      setError('')
+      setLoading(true)
+
+      try {
+        const request: ChangePasswordRequest = {
+          email: formData.email,
+          newPassword: formData.newPassword,
+          verificationToken,
+        }
+
+        await changePassword(request)
+
+        // 清理状态
+        clearCountdown()
+        setVerificationToken('')
+
+        // 跳转到登录页面
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : '修改密码失败，请重试'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [verificationToken, clearCountdown]
+  )
 
   // 清理函数（组件卸载时调用）
   const cleanup = useCallback(() => {

@@ -126,7 +126,10 @@ export function useAuth() {
     if (typeof window !== 'undefined') {
       // 记录当前页面作为重定向参数
       const currentPath = window.location.pathname
-      const redirectUrl = currentPath !== LOGIN_PATH ? `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}` : LOGIN_PATH
+      const redirectUrl =
+        currentPath !== LOGIN_PATH
+          ? `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}`
+          : LOGIN_PATH
       window.location.href = redirectUrl
     }
   }

@@ -2,29 +2,39 @@
 
 import { useUserList } from '@/hooks/admin/user/use-user'
 import { useUserForm } from '@/hooks/admin/user/use-user-form'
+import { useChangePassword } from '@/hooks/admin/user/use-change-password'
 import { useDeleteDialog } from '@/hooks/common/use-delete-dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Users, Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { Users, Plus, Pencil, Trash2, Key, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { UserFormDialog } from './components/user-form-dialog'
 import { UserRoleBadge } from './components/user-role-badge'
+import { ChangePasswordDialog } from './components/change-password-dialog'
 import {
   CreatePermissionButton,
   EditPermissionButton,
   DeletePermissionButton,
 } from '@/components/common/permission-button'
 import { useAuth } from '@/hooks/common/use-auth'
+import type { User } from '@/service/types/user'
 
 export default function UserPage() {
   const { accessibleElements, pagesLoading } = useAuth()
   const canEditElements = accessibleElements?.includes('admin-edit-button') ?? false
+  const canChangePasswordElements = accessibleElements?.includes('admin-edit-button') ?? false
   const canDeleteElements = accessibleElements?.includes('admin-delete-button') ?? false
-  const showActionColumn = pagesLoading || canEditElements || canDeleteElements
+  const showActionColumn =
+    pagesLoading || canEditElements || canChangePasswordElements || canDeleteElements
 
-  const columns = [
+  const columns: Array<{
+    key: string
+    header: string
+    render: (item: User) => React.ReactNode
+    className?: string
+  }> = [
     {
       key: 'id',
       header: 'ID',
@@ -71,10 +81,18 @@ export default function UserPage() {
       key: 'actions',
       header: '操作',
       className: 'text-right',
-      render: item => (
+      render: (item: User) => (
         <div className="flex items-center justify-end gap-2">
           <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
             <Pencil className="h-4 w-4" />
+          </EditPermissionButton>
+          <EditPermissionButton
+            variant="ghost"
+            size="sm"
+            onClick={() => openChangePasswordDialog(item.id, item.email)}
+            title="修改密码"
+          >
+            <Key className="h-4 w-4" />
           </EditPermissionButton>
           <DeletePermissionButton
             variant="ghost"
@@ -118,6 +136,17 @@ export default function UserPage() {
     handleCreate,
     handleUpdate,
   })
+
+  const {
+    isDialogOpen: isChangePasswordDialogOpen,
+    selectedUserEmail,
+    newPassword,
+    submitting: changingPassword,
+    openChangePasswordDialog,
+    closeDialog: closeChangePasswordDialog,
+    setNewPassword,
+    handleSubmit: handleChangePassword,
+  } = useChangePassword()
 
   const {
     isDeleteDialogOpen,
@@ -197,6 +226,16 @@ export default function UserPage() {
         deleting={deleting}
         onConfirm={confirmDelete}
         onCancel={handleCancel}
+      />
+
+      <ChangePasswordDialog
+        open={isChangePasswordDialogOpen}
+        onOpenChange={closeChangePasswordDialog}
+        userEmail={selectedUserEmail}
+        newPassword={newPassword}
+        onNewPasswordChange={setNewPassword}
+        onSubmit={handleChangePassword}
+        submitting={changingPassword}
       />
     </div>
   )

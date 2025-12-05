@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useMemo, FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,7 +32,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     nickname: '',
   })
 
-  const [step, setStep] = useState<'email' | 'verify' | 'register'>('email')
+  // 计算当前步骤
+  const step = useMemo(() => {
+    if (verificationToken) return 'register'
+    if (formData.code) return 'verify'
+    return 'email'
+  }, [verificationToken, formData.code])
 
   // 组件卸载时清理
   useEffect(() => {
@@ -41,19 +46,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
   }, [cleanup])
 
-  // 当有verificationToken时，进入注册步骤
-  useEffect(() => {
-    if (verificationToken) {
-      setStep('register')
-    }
-  }, [verificationToken])
-
   const handleEmailSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       await handleSendCode(formData.email)
-      setStep('verify')
-    } catch (err) {
+      // step will be updated automatically via useMemo
+    } catch {
       // 错误已在hook中处理
     }
   }
@@ -63,7 +61,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     try {
       await handleVerifyCode(formData.email, formData.code)
       // verificationToken会在useEffect中更新，自动进入register步骤
-    } catch (err) {
+    } catch {
       // 错误已在hook中处理
     }
   }
@@ -73,18 +71,16 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     try {
       await handleRegister(formData)
       onSuccess?.()
-    } catch (err) {
+    } catch {
       // 错误已在hook中处理
     }
   }
 
   const handleBackToEmail = () => {
-    setStep('email')
     setFormData(prev => ({ ...prev, code: '' }))
   }
 
   const handleBackToVerify = () => {
-    setStep('verify')
     setFormData(prev => ({ ...prev, password: '', nickname: '' }))
   }
 
@@ -102,25 +98,41 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
       {/* Progress Indicator */}
       <div className="flex items-center justify-center space-x-2">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-          step === 'email' ? 'bg-primary text-primary-foreground' :
-          verificationToken ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            step === 'email'
+              ? 'bg-primary text-primary-foreground'
+              : verificationToken
+                ? 'bg-green-500 text-white'
+                : 'bg-muted text-muted-foreground'
+          }`}
+        >
           1
         </div>
-        <div className={`w-8 h-1 ${
-          step === 'verify' || step === 'register' ? 'bg-primary' : 'bg-muted'
-        }`} />
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-          step === 'verify' ? 'bg-primary text-primary-foreground' :
-          verificationToken ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
-        }`}>
+        <div
+          className={`w-8 h-1 ${
+            step === 'verify' || step === 'register' ? 'bg-primary' : 'bg-muted'
+          }`}
+        />
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            step === 'verify'
+              ? 'bg-primary text-primary-foreground'
+              : verificationToken
+                ? 'bg-green-500 text-white'
+                : 'bg-muted text-muted-foreground'
+          }`}
+        >
           2
         </div>
         <div className={`w-8 h-1 ${step === 'register' ? 'bg-primary' : 'bg-muted'}`} />
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-          step === 'register' && verificationToken ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            step === 'register' && verificationToken
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
           3
         </div>
       </div>
