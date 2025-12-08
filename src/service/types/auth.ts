@@ -94,3 +94,48 @@ export interface ChangePasswordRequest {
 export interface ChangePasswordResponse {
   message: string
 }
+
+/**
+ * AI聊天请求参数
+ */
+export interface AIChatRequest {
+  messages: Array<{
+    role: 'user' | 'assistant' | 'system'
+    content: string
+  }>
+  model?: string
+  stream?: boolean
+}
+
+/**
+ * AI聊天响应数据
+ */
+export interface AIChatResponse {
+  id: string
+  object: string
+  created: number
+  model: string
+  choices: Array<{
+    index: number
+    message: {
+      role: string
+      content: string
+    }
+    finish_reason: string | null
+  }>
+  usage: {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+  }
+}
+
+/**
+ * 聊天消息
+ */
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: number
+}

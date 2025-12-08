@@ -83,7 +83,7 @@ export function useAuth() {
       })
     } catch (error) {
       console.error('获取可访问资源失败:', error)
-      // 即使接口失败，也至少保证 login 页面、注册页面、忘记密码页面和根页面可访问
+      // 即使接口失败，也至少保证 login 页面、注册页面、忘记密码页面、和根页面可访问
       runInAction(() => {
         userStore.accessiblePages = [LOGIN_PATH, '/register', '/forgot-password', '/']
         userStore.accessibleElements = []

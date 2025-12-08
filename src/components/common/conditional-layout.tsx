@@ -19,10 +19,21 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   const isMinimal = isMinimalLayoutRoute(pathname || '')
   const showSidebar = shouldShowSidebar(pathname || '')
+  const isChatPage = pathname === '/chat'
 
   // 最小化布局（不显示 header 和 footer）
   if (isMinimal) {
     return <AuthGuard>{children}</AuthGuard>
+  }
+
+  // 聊天页面特殊处理 - 占满整个视口，只显示header
+  if (isChatPage) {
+    return (
+      <AuthGuard>
+        <Header />
+        <div className="h-screen pt-16">{children}</div>
+      </AuthGuard>
+    )
   }
 
   // 标准布局（显示 header 和 footer）
