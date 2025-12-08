@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { UserInfo } from '@/service/types/auth'
+import { LOGIN_PATH } from '@/config/auth.config'
 
 interface UserDropdownProps {
   user: UserInfo | null
@@ -27,7 +29,13 @@ export function UserDropdown({ user, loading, onLogout }: UserDropdownProps) {
   }
 
   if (!user) {
-    return null
+    return (
+      <Link href={LOGIN_PATH}>
+        <Button variant="default" size="default">
+          登录
+        </Button>
+      </Link>
+    )
   }
 
   return (
