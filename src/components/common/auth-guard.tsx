@@ -36,6 +36,17 @@ function AuthGuardComponent({ children }: AuthGuardProps) {
     // 如果未登录：只返回公共页面
     const pageInAccessibleList = canAccessPage(pathname, accessiblePages)
 
+    // 接口异常时会落到兜底页面列表，此时不应该把已登录用户直接踢回登录页
+    // 兜底列表只包含登录/注册/忘记密码/根路径，若当前用户有 token，
+    // 暂时保留在当前页面，等待后续请求成功后再由 withUser 刷新权限
+    const isFallbackAccessibleList =
+      authenticated &&
+      accessiblePages &&
+      accessiblePages.length === 4 &&
+      [LOGIN_PATH, '/register', '/forgot-password', '/'].every(page =>
+        accessiblePages.includes(page)
+      )
+
     // 如果页面在可访问列表中，允许访问
     if (pageInAccessibleList) {
       // 如果是登录页且已登录，需要等待用户信息加载完成后再决定是否跳转
@@ -72,6 +83,14 @@ function AuthGuardComponent({ children }: AuthGuardProps) {
       return () => clearTimeout(timer)
     }
 
+    // 当权限接口失败时，使用兜底页面列表，保持在当前页面而不是跳回登录
+    if (isFallbackAccessibleList) {
+      const timer = setTimeout(() => {
+        setIsChecking(false)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+
     // 如果页面不在可访问列表中，说明没有权限访问
     // 如果未登录，跳转到登录页，并记录来源页面
     if (!authenticated) {
@@ -84,8 +103,9 @@ function AuthGuardComponent({ children }: AuthGuardProps) {
     // 跳转到用户有权限访问的第一个页面
     if (accessiblePages && accessiblePages.length > 0) {
       const firstAccessiblePage = accessiblePages[0]
-      if (canAccessPage('/admin', accessiblePages)) {
-        router.push('/admin')
+      // 优先跳转到根目录，其次跳转到列表中的第一个页面
+      if (canAccessPage('/', accessiblePages)) {
+        router.push('/')
       } else if (firstAccessiblePage) {
         router.push(firstAccessiblePage)
       } else {
