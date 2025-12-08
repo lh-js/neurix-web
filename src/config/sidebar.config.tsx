@@ -1,4 +1,4 @@
-import { Home, User, Shield } from 'lucide-react'
+import { Home, User, Shield, Settings, FileText } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -99,6 +99,23 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '元素权限管理',
         icon: Shield,
         href: '/admin/role-element',
+      },
+    ],
+  },
+  {
+    id: 'system-management',
+    type: 'group',
+    label: '系统管理',
+    icon: Settings,
+    defaultOpen: false,
+    activePaths: ['/admin/log'],
+    children: [
+      {
+        id: 'log-management',
+        type: 'link',
+        label: '日志管理',
+        icon: FileText,
+        href: '/admin/log',
       },
     ],
   },
