@@ -1,4 +1,4 @@
-import { Home, User, Shield, Settings, FileText, Mail } from 'lucide-react'
+import { Home, User, Shield, Settings, FileText, Mail, Key } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -99,6 +99,23 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '元素权限管理',
         icon: Shield,
         href: '/admin/role-element',
+      },
+    ],
+  },
+  {
+    id: 'email-code-management',
+    type: 'group',
+    label: '验证码管理',
+    icon: Key,
+    defaultOpen: false,
+    activePaths: ['/admin/email-code'],
+    children: [
+      {
+        id: 'email-code-management-link',
+        type: 'link',
+        label: '验证码管理',
+        icon: Key,
+        href: '/admin/email-code',
       },
     ],
   },
