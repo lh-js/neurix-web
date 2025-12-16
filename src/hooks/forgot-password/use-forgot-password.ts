@@ -60,7 +60,7 @@ export function useForgotPassword() {
       setSendCodeLoading(true)
 
       try {
-        const request: SendEmailCodeRequest = { email }
+        const request: SendEmailCodeRequest = { email, scene: 'forgotPassword' }
         await sendEmailCode(request)
         startCountdown()
       } catch (err: unknown) {
@@ -84,7 +84,7 @@ export function useForgotPassword() {
     setVerifyCodeLoading(true)
 
     try {
-      const request: VerifyEmailCodeRequest = { email, code }
+      const request: VerifyEmailCodeRequest = { email, code, scene: 'forgotPassword' }
       const response = await verifyEmailCode(request)
       setVerificationToken(response.verificationToken)
       return response.verificationToken

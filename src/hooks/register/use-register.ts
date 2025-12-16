@@ -57,7 +57,7 @@ export function useRegister() {
       setSendCodeLoading(true)
 
       try {
-        const request: SendEmailCodeRequest = { email }
+        const request: SendEmailCodeRequest = { email, scene: 'register' }
         await sendEmailCode(request)
         startCountdown()
       } catch (err: unknown) {
@@ -81,7 +81,7 @@ export function useRegister() {
     setVerifyCodeLoading(true)
 
     try {
-      const request: VerifyEmailCodeRequest = { email, code }
+      const request: VerifyEmailCodeRequest = { email, code, scene: 'register' }
       const response = await verifyEmailCode(request)
       setVerificationToken(response.verificationToken)
       return response.verificationToken

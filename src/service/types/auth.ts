@@ -38,6 +38,7 @@ export interface AccessibleResourcesResponse {
  */
 export interface SendEmailCodeRequest {
   email: string
+  scene: 'register' | 'forgotPassword'
 }
 
 /**
@@ -53,6 +54,7 @@ export interface SendEmailCodeResponse {
 export interface VerifyEmailCodeRequest {
   email: string
   code: string
+  scene: 'register' | 'forgotPassword'
 }
 
 /**
