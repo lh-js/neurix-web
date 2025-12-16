@@ -1,4 +1,4 @@
-import { Home, User, Shield, Settings, FileText, Mail, Key } from 'lucide-react'
+import { Home, User, Shield, Settings, FileText, Mail, Key, LogIn } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -125,7 +125,7 @@ export const sidebarMenuConfig: MenuItem[] = [
     label: '系统管理',
     icon: Settings,
     defaultOpen: false,
-    activePaths: ['/admin/log', '/admin/email-record'],
+    activePaths: ['/admin/log', '/admin/email-record', '/admin/login-record'],
     children: [
       {
         id: 'log-management',
@@ -140,6 +140,13 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '邮件管理',
         icon: Mail,
         href: '/admin/email-record',
+      },
+      {
+        id: 'login-record-management',
+        type: 'link',
+        label: '登录记录',
+        icon: LogIn,
+        href: '/admin/login-record',
       },
     ],
   },
