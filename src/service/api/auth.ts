@@ -4,6 +4,8 @@ import { getToken, clearAuth } from '@/utils/auth.util'
 import {
   LoginRequest,
   LoginResponse,
+  LoginWithTokenRequest,
+  LoginWithTokenResponse,
   UserInfo,
   AccessibleResourcesResponse,
   SendEmailCodeRequest,
@@ -23,6 +25,14 @@ import {
  */
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const response = await post<LoginResponse>('/auth/login', data)
+  return response
+}
+
+/**
+ * 使用验证码登录 API
+ */
+export async function loginWithToken(data: LoginWithTokenRequest): Promise<LoginWithTokenResponse> {
+  const response = await post<LoginWithTokenResponse>('/auth/login-with-token', data)
   return response
 }
 

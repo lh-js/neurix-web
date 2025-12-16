@@ -14,6 +14,21 @@ export interface LoginResponse {
 }
 
 /**
+ * 使用验证码登录请求参数
+ */
+export interface LoginWithTokenRequest {
+  email: string
+  verificationToken: string
+}
+
+/**
+ * 使用验证码登录响应数据
+ */
+export interface LoginWithTokenResponse {
+  accessToken: string
+}
+
+/**
  * 用户信息
  */
 export interface UserInfo {
@@ -38,7 +53,7 @@ export interface AccessibleResourcesResponse {
  */
 export interface SendEmailCodeRequest {
   email: string
-  scene: 'register' | 'forgotPassword'
+  scene: 'register' | 'forgotPassword' | 'login'
 }
 
 /**
@@ -54,7 +69,7 @@ export interface SendEmailCodeResponse {
 export interface VerifyEmailCodeRequest {
   email: string
   code: string
-  scene: 'register' | 'forgotPassword'
+  scene: 'register' | 'forgotPassword' | 'login'
 }
 
 /**
