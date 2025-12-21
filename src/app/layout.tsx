@@ -20,58 +20,13 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        <Script src="/mo-guard.js" strategy="beforeInteractive" />
         <Script
-          id="mutation-observer-guard"
+          id="theme-bootstrap"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // 提前包裹 MutationObserver.observe，吞掉非 Node 目标的调用
-                if (typeof window !== 'undefined' && window.MutationObserver) {
-                  var OriginalMutationObserver = window.MutationObserver;
-                  var originalObserve = OriginalMutationObserver.prototype.observe;
-
-                  var ensureBodyReady = function (self, options) {
-                    var tryAttach = function () {
-                      if (document && document.body) {
-                        try { originalObserve.call(self, document.body, options); } catch (_) {}
-                        return true;
-                      }
-                      return false;
-                    };
-
-                    if (tryAttach()) return;
-
-                    var interval = setInterval(function () {
-                      if (tryAttach()) clearInterval(interval);
-                    }, 10);
-
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      tryAttach();
-                    }, 1000);
-                  };
-
-                  OriginalMutationObserver.prototype.observe = function (target, options) {
-                    var isNode = target && typeof target === 'object' && typeof target.nodeType === 'number';
-                    var isBodyTarget = target === document.body || (target && target.nodeName === 'BODY');
-
-                    if (!isNode) {
-                      if (isBodyTarget) {
-                        ensureBodyReady(this, options);
-                      }
-                      return;
-                    }
-
-                    try {
-                      return originalObserve.call(this, target, options);
-                    } catch (err) {
-                      if (err && err.name === 'TypeError') return;
-                      throw err;
-                    }
-                  };
-                }
-
                 // 立即处理主题，避免闪烁
                 try {
                   var theme = localStorage.getItem('neurix-theme');
