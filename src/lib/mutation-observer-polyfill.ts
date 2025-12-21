@@ -6,6 +6,17 @@
  */
 
 if (typeof window !== 'undefined' && window.MutationObserver) {
+  // Debug hook：确认守卫已注入，避免线上误以为未生效
+  if (!(window as any).__MO_GUARD_LOGGED__) {
+    ;(window as any).__MO_GUARD_LOGGED__ = true
+    // 仅在控制台低噪声输出一次
+    try {
+      console.debug?.('[MO guard] installed', new Date().toISOString())
+    } catch (_) {
+      // ignore
+    }
+  }
+
   const OriginalMutationObserver = window.MutationObserver
   const originalObserve = OriginalMutationObserver.prototype.observe
 

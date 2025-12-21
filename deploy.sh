@@ -94,8 +94,8 @@ fi
 
 # 第三步：打包
 if [ "$SKIP_BUILD" = false ]; then
-    log_step "第三步：打包项目..."
-    pnpm run build
+    log_step "第三步：打包项目 (强制使用 webpack，禁用 Turbopack)..."
+    NEXT_USE_TURBOPACK=0 pnpm run build -- --webpack
 else
     log_info "跳过构建项目"
 fi
