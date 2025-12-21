@@ -17,23 +17,45 @@ export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
 
   useEffect(() => {
     // 确保 DOM 完全准备好
-    // 使用 requestAnimationFrame 确保在浏览器完成布局后再渲染
+    // 检查 document.body 是否存在且是一个有效的 Node
     if (typeof window !== 'undefined') {
-      const timer = requestAnimationFrame(() => {
-        // 再次检查确保 document.body 存在
+      const checkBody = () => {
+        // 检查 body 是否存在且是有效的 Node 实例
+        if (
+          document.body &&
+          document.body instanceof Node &&
+          document.body.nodeType === Node.ELEMENT_NODE
+        ) {
+          setMounted(true)
+          return true
+        }
+        return false
+      }
+
+      // 立即检查一次
+      if (checkBody()) {
+        return
+      }
+
+      // 如果 body 还不存在，等待它创建
+      const timer = setInterval(() => {
+        if (checkBody()) {
+          clearInterval(timer)
+        }
+      }, 10)
+
+      // 设置超时，避免无限等待
+      const timeout = setTimeout(() => {
+        clearInterval(timer)
         if (document.body) {
           setMounted(true)
-        } else {
-          // 如果 body 还不存在，等待一下再试
-          setTimeout(() => {
-            if (document.body) {
-              setMounted(true)
-            }
-          }, 0)
         }
-      })
+      }, 1000)
 
-      return () => cancelAnimationFrame(timer)
+      return () => {
+        clearInterval(timer)
+        clearTimeout(timeout)
+      }
     }
   }, [])
 
