@@ -153,34 +153,51 @@ log_info "等待应用启动..."
 sleep 5
 
 # 检查应用状态和端口
-PM2_STATUS=$(pm2 list | grep "$APP_NAME" | awk '{print $10}' || echo "")
+# 使用 pm2 describe 命令获取状态（最可靠的方法）
+PM2_STATUS=$(pm2 describe "$APP_NAME" 2>/dev/null | grep -E "^\s*status\s+" | awk '{print $4}' | head -1 || echo "")
 
-if [ "$PM2_STATUS" = "online" ]; then
-    # 检查端口是否被监听
-    PORT_LISTENING=false
-    
-    if command -v lsof &> /dev/null; then
-        if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null 2>&1; then
-            PORT_LISTENING=true
-        fi
-    elif command -v netstat &> /dev/null; then
-        if netstat -tlnp 2>/dev/null | grep -q ":${PORT} "; then
-            PORT_LISTENING=true
-        fi
-    elif command -v ss &> /dev/null; then
-        if ss -tlnp 2>/dev/null | grep -q ":${PORT} "; then
-            PORT_LISTENING=true
-        fi
+# 如果 pm2 describe 失败，尝试从表格输出中提取（兼容性方案）
+if [ -z "$PM2_STATUS" ]; then
+    # PM2 表格格式：状态在第5列（用 | 分隔），需要去除空格
+    PM2_STATUS=$(pm2 list | grep "$APP_NAME" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $5); print $5}' || echo "")
+fi
+
+# 如果还是失败，尝试使用 pm2 jlist（JSON 格式）
+if [ -z "$PM2_STATUS" ] && command -v jq &> /dev/null; then
+    PM2_STATUS=$(pm2 jlist 2>/dev/null | jq -r ".[] | select(.name==\"$APP_NAME\") | .pm2_env.status" 2>/dev/null || echo "")
+fi
+
+# 检查端口是否被监听（这是最可靠的判断方式）
+PORT_LISTENING=false
+
+if command -v lsof &> /dev/null; then
+    if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null 2>&1; then
+        PORT_LISTENING=true
     fi
-    
+elif command -v netstat &> /dev/null; then
+    if netstat -tlnp 2>/dev/null | grep -q ":${PORT} "; then
+        PORT_LISTENING=true
+    fi
+elif command -v ss &> /dev/null; then
+    if ss -tlnp 2>/dev/null | grep -q ":${PORT} "; then
+        PORT_LISTENING=true
+    fi
+fi
+
+# 判断应用是否成功启动
+if [ "$PM2_STATUS" = "online" ] || [ "$PORT_LISTENING" = true ]; then
     if [ "$PORT_LISTENING" = true ]; then
-        log_info "应用启动成功 ✓ (端口 ${PORT} 正在监听)"
+        if [ "$PM2_STATUS" = "online" ]; then
+            log_info "应用启动成功 ✓ (PM2 状态: online, 端口 ${PORT} 正在监听)"
+        else
+            log_info "应用启动成功 ✓ (端口 ${PORT} 正在监听, PM2 状态检查失败但应用正常运行)"
+        fi
     else
         log_warn "PM2 显示应用在线，但端口 ${PORT} 未被监听"
         log_warn "可能应用启动后立即退出了，请查看日志: pm2 logs $APP_NAME"
     fi
 else
-    log_error "应用启动失败！PM2 状态: ${PM2_STATUS:-unknown}"
+    log_error "应用启动失败！PM2 状态: ${PM2_STATUS:-unknown}, 端口 ${PORT} 未监听"
     log_error "请查看日志了解详情: pm2 logs $APP_NAME"
 fi
 
