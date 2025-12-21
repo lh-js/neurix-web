@@ -16,7 +16,7 @@ export interface RoleApi {
 export interface CreateRoleApiRequest {
   url: string
   description: string
-  method: string[]
+  methods: string[] // HTTP 方法数组，如 ['GET', 'POST']
   isPublic: boolean
 }
 
@@ -26,7 +26,7 @@ export interface CreateRoleApiRequest {
 export interface UpdateRoleApiRequest {
   url?: string
   description?: string
-  method?: string[]
+  methods?: string[] // HTTP 方法数组，如 ['GET', 'POST']
   isPublic?: boolean
 }
 
