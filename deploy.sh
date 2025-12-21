@@ -155,6 +155,11 @@ if pm2 list | grep -q "$APP_NAME"; then
         pkill -f "next.*start" || true
         sleep 2
     fi
+    # 清理构建缓存，避免 Server Action ID 冲突
+    if [ -d ".next" ]; then
+        log_info "清理旧的构建缓存（避免 Server Action 错误）..."
+        rm -rf .next/cache
+    fi
 fi
 
 log_info "启动应用..."
@@ -165,18 +170,44 @@ log_info "等待应用启动..."
 sleep 5
 
 # 检查应用状态和端口
-# 使用 pm2 describe 命令获取状态（最可靠的方法）
-PM2_STATUS=$(pm2 describe "$APP_NAME" 2>/dev/null | grep -E "^\s*status\s+" | awk '{print $4}' | head -1 || echo "")
-
-# 如果 pm2 describe 失败，尝试从表格输出中提取（兼容性方案）
-if [ -z "$PM2_STATUS" ]; then
-    # PM2 表格格式：状态在第5列（用 | 分隔），需要去除空格
-    PM2_STATUS=$(pm2 list | grep "$APP_NAME" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $5); print $5}' || echo "")
+# 优先使用 pm2 jlist 获取 JSON 格式（最可靠）
+PM2_STATUS=""
+if command -v jq &> /dev/null; then
+    PM2_STATUS=$(pm2 jlist 2>/dev/null | jq -r ".[] | select(.name==\"$APP_NAME\") | .pm2_env.status" 2>/dev/null || echo "")
 fi
 
-# 如果还是失败，尝试使用 pm2 jlist（JSON 格式）
-if [ -z "$PM2_STATUS" ] && command -v jq &> /dev/null; then
-    PM2_STATUS=$(pm2 jlist 2>/dev/null | jq -r ".[] | select(.name==\"$APP_NAME\") | .pm2_env.status" 2>/dev/null || echo "")
+# 如果 jq 不可用，从表格输出中提取（状态在第5列）
+if [ -z "$PM2_STATUS" ] || [ "$PM2_STATUS" = "null" ]; then
+    # PM2 表格格式：│ id │ name │ mode │ ↺ │ status │ cpu │ memory │
+    # 状态在第5列（用 │ 分隔），需要去除空格
+    # 格式：│ 8  │ neurix-web │ fork │ 0 │ online │ 0% │ 144.4mb │
+    PM2_STATUS=$(pm2 list | grep "$APP_NAME" | awk -F'│' '{
+        for(i=1;i<=NF;i++) {
+            gsub(/^[ \t]+|[ \t]+$/, "", $i)
+        }
+        # 状态在第5列
+        if (NF >= 5) print $5
+    }' || echo "")
+fi
+
+# 如果还是失败，尝试使用 pm2 describe（最后的手段）
+if [ -z "$PM2_STATUS" ] || [ "$PM2_STATUS" = "null" ]; then
+    # pm2 describe 输出格式可能不同，尝试多种方式
+    PM2_STATUS=$(pm2 describe "$APP_NAME" 2>/dev/null | grep -i "status" | grep -v "restart" | head -1 | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); if ($2 ~ /online|stopped|errored/) print $2}' || echo "")
+fi
+
+# 清理状态值，确保只包含有效的状态（避免获取到版本号等无效值）
+if [ -n "$PM2_STATUS" ]; then
+    case "$PM2_STATUS" in
+        online|stopped|errored|launching|stopping)
+            # 有效状态，保持不变
+            ;;
+        *)
+            # 无效状态（可能是版本号或其他值），清空它，依赖端口检查
+            log_warn "检测到无效的 PM2 状态值: '$PM2_STATUS'，将依赖端口检查"
+            PM2_STATUS=""
+            ;;
+    esac
 fi
 
 # 检查端口是否被监听（这是最可靠的判断方式）
