@@ -7,64 +7,56 @@
 
 if (typeof window !== 'undefined' && window.MutationObserver) {
   const OriginalMutationObserver = window.MutationObserver
-  const OriginalObserve = OriginalMutationObserver.prototype.observe
+  const originalObserve = OriginalMutationObserver.prototype.observe
+
+  const ensureBodyReady = (self: MutationObserver, options?: MutationObserverInit) => {
+    const tryAttach = () => {
+      if (document && document.body) {
+        try {
+          originalObserve.call(self, document.body, options)
+        } catch (_) {
+          // swallow
+        }
+        return true
+      }
+      return false
+    }
+
+    if (tryAttach()) return
+
+    const interval = setInterval(() => {
+      if (tryAttach()) clearInterval(interval)
+    }, 10)
+
+    setTimeout(() => {
+      clearInterval(interval)
+      tryAttach()
+    }, 1000)
+  }
 
   // 重写 observe 方法
   OriginalMutationObserver.prototype.observe = function (
-    target: Node,
+    target: Node | null,
     options?: MutationObserverInit
   ) {
-    // 严格检查 target 是否是有效的 Node
-    const isValidNode =
-      target &&
-      typeof target === 'object' &&
-      target.nodeType !== undefined &&
-      target.nodeType === Node.ELEMENT_NODE &&
-      target instanceof Node
+    const isNode = target && typeof target === 'object' && typeof (target as any).nodeType === 'number'
+    const isBodyTarget =
+      target === document.body || (target && (target as any).nodeName === 'BODY')
 
-    if (!isValidNode) {
-      // 如果 target 是 document.body 但 body 还不存在，等待它准备好
-      if (
-        target === document.body ||
-        (target && (target as any).constructor?.name === 'HTMLBodyElement')
-      ) {
-        const self = this
-        const checkBody = setInterval(() => {
-          if (
-            document.body &&
-            document.body instanceof Node &&
-            document.body.nodeType === Node.ELEMENT_NODE
-          ) {
-            clearInterval(checkBody)
-            try {
-              OriginalObserve.call(self, document.body, options)
-            } catch (e) {
-              // 静默处理错误
-            }
-          }
-        }, 10)
-
-        setTimeout(() => {
-          clearInterval(checkBody)
-          if (document.body && document.body instanceof Node) {
-            try {
-              OriginalObserve.call(self, document.body, options)
-            } catch (e) {
-              // 静默处理错误
-            }
-          }
-        }, 1000)
-        return
+    if (!isNode) {
+      if (isBodyTarget) {
+        ensureBodyReady(this, options)
       }
-      // 对于其他无效目标，直接返回，不执行
       return
     }
 
-    // 对于有效的 Node，正常执行
     try {
-      OriginalObserve.call(this, target, options)
-    } catch (e) {
-      // 如果仍然失败，静默处理
+      originalObserve.call(this, target as Node, options)
+    } catch (err: any) {
+      // 某些第三方会传入非 Node 导致 TypeError，这里安全吞掉
+      if (err && err.name === 'TypeError') return
+      throw err
     }
   }
 }
+

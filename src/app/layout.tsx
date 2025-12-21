@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 // 必须在任何 Radix UI 组件之前导入，修复 MutationObserver 错误
 import '@/lib/mutation-observer-polyfill'
+import Script from 'next/script'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
 import { ClientOnly } from '@/components/providers/client-only'
@@ -19,94 +20,68 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <script
+        <Script
+          id="mutation-observer-guard"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // 立即保护 MutationObserver，必须在任何其他代码执行前运行
-                (function() {
-                  if (typeof window === 'undefined') return;
-                  
-                  // 保存原始的 MutationObserver
+                // 提前包裹 MutationObserver.observe，吞掉非 Node 目标的调用
+                if (typeof window !== 'undefined' && window.MutationObserver) {
                   var OriginalMutationObserver = window.MutationObserver;
-                  if (!OriginalMutationObserver) return;
-                  
-                  // 包装 observe 方法
-                  var OriginalObserve = OriginalMutationObserver.prototype.observe;
-                  
-                  OriginalMutationObserver.prototype.observe = function(target, options) {
-                    // 严格检查 target 是否是有效的 Node
-                    var isValidNode = target && 
-                                     typeof target === 'object' && 
-                                     target.nodeType !== undefined && 
-                                     target.nodeType === Node.ELEMENT_NODE &&
-                                     target instanceof Node;
-                    
-                    if (!isValidNode) {
-                      // 如果 target 是 document.body 但 body 还不存在，等待它准备好
-                      if (target === document.body || (target && target.constructor && target.constructor.name === 'HTMLBodyElement')) {
-                        var self = this;
-                        var args = arguments;
-                        var checkBody = setInterval(function() {
-                          if (document.body && 
-                              document.body instanceof Node && 
-                              document.body.nodeType === Node.ELEMENT_NODE) {
-                            clearInterval(checkBody);
-                            try {
-                              OriginalObserve.apply(self, [document.body, args[1]]);
-                            } catch (e) {
-                              // 静默处理错误
-                            }
-                          }
-                        }, 10);
-                        
-                        setTimeout(function() {
-                          clearInterval(checkBody);
-                          if (document.body && document.body instanceof Node) {
-                            try {
-                              OriginalObserve.apply(self, [document.body, args[1]]);
-                            } catch (e) {
-                              // 静默处理错误
-                            }
-                          }
-                        }, 1000);
-                        return;
+                  var originalObserve = OriginalMutationObserver.prototype.observe;
+
+                  var ensureBodyReady = function (self, options) {
+                    var tryAttach = function () {
+                      if (document && document.body) {
+                        try { originalObserve.call(self, document.body, options); } catch (_) {}
+                        return true;
                       }
-                      // 对于其他无效目标，直接返回，不执行
+                      return false;
+                    };
+
+                    if (tryAttach()) return;
+
+                    var interval = setInterval(function () {
+                      if (tryAttach()) clearInterval(interval);
+                    }, 10);
+
+                    setTimeout(function () {
+                      clearInterval(interval);
+                      tryAttach();
+                    }, 1000);
+                  };
+
+                  OriginalMutationObserver.prototype.observe = function (target, options) {
+                    var isNode = target && typeof target === 'object' && typeof target.nodeType === 'number';
+                    var isBodyTarget = target === document.body || (target && target.nodeName === 'BODY');
+
+                    if (!isNode) {
+                      if (isBodyTarget) {
+                        ensureBodyReady(this, options);
+                      }
                       return;
                     }
-                    
-                    // 对于有效的 Node，正常执行
+
                     try {
-                      OriginalObserve.apply(this, arguments);
-                    } catch (e) {
-                      // 如果仍然失败，静默处理
+                      return originalObserve.call(this, target, options);
+                    } catch (err) {
+                      if (err && err.name === 'TypeError') return;
+                      throw err;
                     }
                   };
-                })();
-                
-                // 然后处理主题
+                }
+
+                // 立即处理主题，避免闪烁
                 try {
-                  const theme = localStorage.getItem('neurix-theme');
-                  let isDark = false;
-                  
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if (theme === 'light') {
-                    isDark = false;
-                  } else {
-                    // system 或未设置，根据系统主题决定
-                    isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  }
-                  
-                  // 立即应用主题，避免闪烁
+                  var theme = localStorage.getItem('neurix-theme');
+                  var isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
                   if (isDark) {
                     document.documentElement.classList.add('dark');
                   } else {
                     document.documentElement.classList.remove('dark');
                   }
-                  
-                  // 设置标志，告诉 ThemeProvider 已经应用了主题
                   document.documentElement.setAttribute('data-theme-applied', 'true');
                 } catch (e) {
                   document.documentElement.classList.remove('dark');
