@@ -127,6 +127,11 @@ fi
 # 第三步：构建项目（可选）
 if [ "$SKIP_BUILD" = false ]; then
     log_step "构建项目..."
+    # 清理旧的构建缓存，避免 Server Action ID 冲突
+    if [ -d ".next" ]; then
+        log_info "清理旧的构建缓存..."
+        rm -rf .next/cache
+    fi
     pnpm run build
 else
     log_info "跳过构建项目"
@@ -142,7 +147,14 @@ if pm2 list | grep -q "$APP_NAME"; then
     log_info "停止现有进程..."
     pm2 stop "$APP_NAME" || true
     pm2 delete "$APP_NAME" || true
-    sleep 2
+    # 等待进程完全停止
+    sleep 3
+    # 确保进程已完全停止
+    if pgrep -f "next.*start" > /dev/null; then
+        log_warn "检测到残留的 Next.js 进程，正在清理..."
+        pkill -f "next.*start" || true
+        sleep 2
+    fi
 fi
 
 log_info "启动应用..."

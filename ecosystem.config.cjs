@@ -37,6 +37,10 @@ module.exports = {
       max_restarts: 10, // 最大重启次数
       min_uptime: '10s', // 最小运行时间，少于此时长视为异常重启
       restart_delay: 4000, // 重启延迟（毫秒）
+      // 优雅关闭配置，避免 Server Action 冲突
+      kill_timeout: 5000, // 优雅关闭超时时间
+      wait_ready: true, // 等待应用就绪
+      listen_timeout: 10000, // 监听超时时间
       // 其他配置
       kill_timeout: 5000, // 优雅关闭超时时间
       listen_timeout: 10000, // 监听超时时间
