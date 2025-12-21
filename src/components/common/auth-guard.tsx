@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { isAuthenticated, canAccessPage } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
@@ -13,10 +13,11 @@ interface AuthGuardProps {
 }
 
 /**
- * 路由保护组件
- * 检查用户登录状态和页面访问权限，保护需要登录的页面
+ * 内部组件：处理 searchParams 的逻辑
+ * 需要被 Suspense 包裹以支持静态生成
+ * 使用 withUser 包裹以响应 MobX store 变化
  */
-function AuthGuardComponent({ children }: AuthGuardProps) {
+const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -144,4 +145,26 @@ function AuthGuardComponent({ children }: AuthGuardProps) {
 }
 
 // 使用 withUser HOC 使组件响应 userStore 的变化
-export const AuthGuard = withUser(AuthGuardComponent)
+const AuthGuardInner = withUser(AuthGuardInnerBase) as typeof AuthGuardInnerBase
+
+/**
+ * 路由保护组件
+ * 检查用户登录状态和页面访问权限，保护需要登录的页面
+ * 使用 Suspense 包裹以支持 Next.js 静态生成
+ */
+export function AuthGuard({ children }: AuthGuardProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Spinner className="h-8 w-8" />
+            <p className="text-sm text-muted-foreground">加载中...</p>
+          </div>
+        </div>
+      }
+    >
+      <AuthGuardInner>{children}</AuthGuardInner>
+    </Suspense>
+  )
+}
