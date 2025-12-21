@@ -130,7 +130,20 @@ if [ "$SKIP_BUILD" = false ]; then
     # 清理旧的构建缓存，避免 Server Action ID 冲突
     if [ -d ".next" ]; then
         log_info "清理旧的构建缓存..."
+        # 清理缓存目录（包含 Server Action 的 ID 映射）
         rm -rf .next/cache
+        # 清理 server 目录中的旧文件（可能包含旧的 Server Action）
+        if [ -d ".next/server" ]; then
+            find .next/server -name "*.js" -type f -delete 2>/dev/null || true
+        fi
+        # 清理 standalone 目录（如果使用 standalone 输出）
+        if [ -d ".next/standalone" ]; then
+            rm -rf .next/standalone/.next/cache 2>/dev/null || true
+        fi
+        # 清理路由缓存（可能包含旧的 Server Action ID）
+        if [ -f ".next/routes-manifest.json" ]; then
+            rm -f .next/routes-manifest.json 2>/dev/null || true
+        fi
     fi
     pnpm run build
 else
@@ -158,7 +171,20 @@ if pm2 list | grep -q "$APP_NAME"; then
     # 清理构建缓存，避免 Server Action ID 冲突
     if [ -d ".next" ]; then
         log_info "清理旧的构建缓存（避免 Server Action 错误）..."
+        # 清理缓存目录（包含 Server Action 的 ID 映射）
         rm -rf .next/cache
+        # 清理 server 目录中的旧文件（可能包含旧的 Server Action）
+        if [ -d ".next/server" ]; then
+            find .next/server -name "*.js" -type f -delete 2>/dev/null || true
+        fi
+        # 清理 standalone 目录（如果使用 standalone 输出）
+        if [ -d ".next/standalone" ]; then
+            rm -rf .next/standalone/.next/cache 2>/dev/null || true
+        fi
+        # 清理路由缓存（可能包含旧的 Server Action ID）
+        if [ -d ".next/routes-manifest.json" ]; then
+            rm -f .next/routes-manifest.json 2>/dev/null || true
+        fi
     fi
 fi
 
@@ -167,7 +193,17 @@ pm2 start ecosystem.config.cjs --env production
 pm2 save
 
 log_info "等待应用启动..."
-sleep 5
+# 增加等待时间，确保应用完全启动
+sleep 8
+
+# 再次检查，如果还没就绪，再等待
+for i in {1..5}; do
+    if pm2 list | grep -q "$APP_NAME.*online"; then
+        break
+    fi
+    log_info "应用还在启动中，等待 ${i} 秒..."
+    sleep 2
+done
 
 # 检查应用状态和端口
 # 优先使用 pm2 jlist 获取 JSON 格式（最可靠）
@@ -180,14 +216,22 @@ fi
 if [ -z "$PM2_STATUS" ] || [ "$PM2_STATUS" = "null" ]; then
     # PM2 表格格式：│ id │ name │ mode │ ↺ │ status │ cpu │ memory │
     # 状态在第5列（用 │ 分隔），需要去除空格
-    # 格式：│ 8  │ neurix-web │ fork │ 0 │ online │ 0% │ 144.4mb │
-    PM2_STATUS=$(pm2 list | grep "$APP_NAME" | awk -F'│' '{
+    # 格式：│ 9  │ neurix-web │ fork │ 0 │ online │ 0% │ 169.3mb │
+    # 使用简单的方法：找到包含应用名称的行，然后提取第5列
+    PM2_STATUS=$(pm2 list 2>/dev/null | grep "$APP_NAME" | awk -F'│' '{
+        # 清理所有列的空格
         for(i=1;i<=NF;i++) {
             gsub(/^[ \t]+|[ \t]+$/, "", $i)
         }
         # 状态在第5列
-        if (NF >= 5) print $5
-    }' || echo "")
+        if (NF >= 5) {
+            status = $5
+            # 只输出有效状态
+            if (status == "online" || status == "stopped" || status == "errored" || status == "launching" || status == "stopping") {
+                print status
+            }
+        }
+    }' | head -1 || echo "")
 fi
 
 # 如果还是失败，尝试使用 pm2 describe（最后的手段）
@@ -213,19 +257,30 @@ fi
 # 检查端口是否被监听（这是最可靠的判断方式）
 PORT_LISTENING=false
 
-if command -v lsof &> /dev/null; then
-    if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null 2>&1; then
-        PORT_LISTENING=true
+# 多次尝试检查端口，因为应用可能需要一些时间才能完全启动
+for i in {1..3}; do
+    if command -v lsof &> /dev/null; then
+        if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null 2>&1; then
+            PORT_LISTENING=true
+            break
+        fi
+    elif command -v netstat &> /dev/null; then
+        if netstat -tlnp 2>/dev/null | grep -q ":${PORT} "; then
+            PORT_LISTENING=true
+            break
+        fi
+    elif command -v ss &> /dev/null; then
+        if ss -tlnp 2>/dev/null | grep -q ":${PORT} "; then
+            PORT_LISTENING=true
+            break
+        fi
     fi
-elif command -v netstat &> /dev/null; then
-    if netstat -tlnp 2>/dev/null | grep -q ":${PORT} "; then
-        PORT_LISTENING=true
+    
+    if [ $i -lt 3 ]; then
+        log_info "端口 ${PORT} 尚未监听，等待 2 秒后重试..."
+        sleep 2
     fi
-elif command -v ss &> /dev/null; then
-    if ss -tlnp 2>/dev/null | grep -q ":${PORT} "; then
-        PORT_LISTENING=true
-    fi
-fi
+done
 
 # 判断应用是否成功启动
 if [ "$PM2_STATUS" = "online" ] || [ "$PORT_LISTENING" = true ]; then
