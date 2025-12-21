@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
+import { ClientOnly } from '@/components/providers/client-only'
 
 export const metadata: Metadata = {
   title: 'Neurix',
@@ -52,10 +53,12 @@ export default function RootLayout({
         />
       </head>
       <body className="h-screen flex flex-col bg-background">
-        <ThemeProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-          <ThemedToaster />
-        </ThemeProvider>
+        <ClientOnly>
+          <ThemeProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+            <ThemedToaster />
+          </ThemeProvider>
+        </ClientOnly>
       </body>
     </html>
   )
