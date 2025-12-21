@@ -52,6 +52,37 @@
         throw err
       }
     }
+
+    // 兜底隐藏已知 MutationObserver TypeError，避免刷新时污染控制台
+    var suppress = function (message) {
+      return (
+        typeof message === 'string' &&
+        message.indexOf("Failed to execute 'observe' on 'MutationObserver'") !== -1
+      )
+    }
+
+    window.addEventListener(
+      'error',
+      function (e) {
+        if (suppress(e.message)) {
+          e.preventDefault()
+          return true
+        }
+      },
+      { capture: true }
+    )
+
+    window.addEventListener(
+      'unhandledrejection',
+      function (e) {
+        var msg = e?.reason?.message || ''
+        if (suppress(msg)) {
+          e.preventDefault()
+          return true
+        }
+      },
+      { capture: true }
+    )
   } catch (e) {
     // swallow any unexpected errors to avoid breaking bootstrap
   }
