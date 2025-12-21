@@ -104,17 +104,15 @@ fi
 log_step "第四步：PM2 部署..."
 APP_NAME="neurix-web"
 
-# 停止并删除旧进程
+# 检查进程是否存在
 if pm2 list | grep -q "$APP_NAME"; then
-    log_info "停止现有进程..."
-    pm2 stop "$APP_NAME" || true
-    pm2 delete "$APP_NAME" || true
-    sleep 2
+    log_info "进程已存在，执行重启..."
+    pm2 restart "$APP_NAME" --update-env
+else
+    log_info "进程不存在，启动新进程..."
+    pm2 start ecosystem.config.cjs --env production
 fi
 
-# 启动应用
-log_info "启动应用..."
-pm2 start ecosystem.config.cjs --env production
 pm2 save
 
 log_info "部署完成！"
