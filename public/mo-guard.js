@@ -83,6 +83,21 @@
       },
       { capture: true }
     )
+
+    // 屏蔽相关 console.error 噪音，避免控制台显示
+    var originalConsoleError = console.error
+    console.error = function () {
+      var args = Array.prototype.slice.call(arguments)
+      var joined = args.map(function (a) {
+        if (a && a.message) return a.message
+        if (typeof a === 'string') return a
+        return ''
+      }).join(' ')
+      if (suppress(joined)) {
+        return
+      }
+      return originalConsoleError.apply(console, args)
+    }
   } catch (e) {
     // swallow any unexpected errors to avoid breaking bootstrap
   }
