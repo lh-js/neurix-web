@@ -20,7 +20,28 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <Script src="/mo-guard.js" strategy="beforeInteractive" />
+        <Script
+          id="suppress-console-errors"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window === 'undefined') return;
+                var noop = function() {};
+                var originalError = console.error;
+                console.error = noop;
+                window.addEventListener('error', function(e) {
+                  e.preventDefault();
+                  return true;
+                }, { capture: true });
+                window.addEventListener('unhandledrejection', function(e) {
+                  e.preventDefault();
+                  return true;
+                }, { capture: true });
+              })();
+            `,
+          }}
+        />
         <Script
           id="theme-bootstrap"
           strategy="beforeInteractive"
