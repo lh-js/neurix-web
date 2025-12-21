@@ -4,6 +4,8 @@ import path from 'path'
 const POLYFILL_PATH = './src/lib/mutation-observer-polyfill.ts'
 
 const nextConfig: NextConfig = {
+  // Explicitly opt into Turbopack to silence "webpack config with no turbopack config" error
+  turbopack: {},
   webpack: (config) => {
     const originalEntry = config.entry
 
