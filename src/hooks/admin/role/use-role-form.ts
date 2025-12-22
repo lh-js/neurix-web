@@ -62,6 +62,12 @@ export function useRoleForm({
   }
 
   const openEditDialog = async (item: Role) => {
+    // 检查 level 是否为 0，如果是则不允许编辑
+    if (item.level === 0) {
+      toast.error('level 为 0 的角色不能编辑')
+      return
+    }
+
     setEditingItem(item)
     setDialogLoading(true)
     setIsDialogOpen(true)
@@ -69,6 +75,13 @@ export function useRoleForm({
     try {
       // 通过接口获取最新的数据
       const role = await fetchRoleById(item.id)
+      // 再次检查 level，防止数据被修改
+      if (role.level === 0) {
+        toast.error('level 为 0 的角色不能编辑')
+        setIsDialogOpen(false)
+        setEditingItem(null)
+        return
+      }
       setFormData({
         name: role.name,
         description: role.description,
@@ -80,6 +93,13 @@ export function useRoleForm({
       setEditingItem(role)
     } catch {
       // 如果获取失败，使用列表中的数据
+      // 再次检查 level
+      if (item.level === 0) {
+        toast.error('level 为 0 的角色不能编辑')
+        setIsDialogOpen(false)
+        setEditingItem(null)
+        return
+      }
       setFormData({
         name: item.name,
         description: item.description,
@@ -96,6 +116,12 @@ export function useRoleForm({
 
   const handleSubmit = async () => {
     if (submitting) return
+
+    // 如果是编辑模式，检查 level 是否为 0
+    if (editingItem && editingItem.level === 0) {
+      toast.error('level 为 0 的角色不能编辑')
+      return
+    }
 
     try {
       setSubmitting(true)

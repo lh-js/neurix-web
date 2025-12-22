@@ -18,6 +18,7 @@ import {
   DeletePermissionButton,
 } from '@/components/common/permission-button'
 import { useAuth } from '@/hooks/common/use-auth'
+import { toast } from 'sonner'
 import type { Role } from '@/service/types/role'
 
 export default function RolePage() {
@@ -167,21 +168,42 @@ export default function RolePage() {
       key: 'actions',
       header: '操作',
       className: 'text-right',
-      render: item => (
-        <div className="flex items-center justify-end gap-2">
-          <EditPermissionButton variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
-            <Pencil className="h-4 w-4" />
-          </EditPermissionButton>
-          <DeletePermissionButton
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteClick(item.id)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </DeletePermissionButton>
-        </div>
-      ),
+      render: item => {
+        const isLevelZero = item.level === 0
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <EditPermissionButton
+              variant="ghost"
+              size="sm"
+              disabled={isLevelZero}
+              onClick={() => {
+                if (isLevelZero) {
+                  toast.error('level 为 0 的角色不能编辑')
+                  return
+                }
+                openEditDialog(item)
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </EditPermissionButton>
+            <DeletePermissionButton
+              variant="ghost"
+              size="sm"
+              disabled={isLevelZero}
+              onClick={() => {
+                if (isLevelZero) {
+                  toast.error('level 为 0 的角色不能删除')
+                  return
+                }
+                handleDeleteClick(item.id)
+              }}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </DeletePermissionButton>
+          </div>
+        )
+      },
     })
   }
 

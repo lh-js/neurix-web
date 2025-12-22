@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { getRoleList, getRoleById, createRole, updateRole, deleteRole } from '@/service/api/role'
 import { Role, CreateRoleRequest, UpdateRoleRequest, RoleListResponse } from '@/service/types/role'
 
@@ -71,6 +72,13 @@ export function useRole() {
   // 删除
   const handleDelete = async (id: number) => {
     try {
+      // 先获取角色信息，检查 level 是否为 0
+      const role = await getRoleById(id)
+      if (role.level === 0) {
+        toast.error('level 为 0 的角色不能删除')
+        throw new Error('level 为 0 的角色不能删除')
+      }
+
       await deleteRole(id)
 
       // 先获取当前页的最新数据，检查是否还有数据
