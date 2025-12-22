@@ -126,32 +126,46 @@ export function DataTable<T extends { id: number | string }>({
 
   return (
     <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map(column => (
-              <TableHead key={column.key} className={column.className}>
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map(item => (
-            <TableRow key={item.id}>
-              {columns.map(column => (
-                <TableCell key={column.key} className={column.className}>
-                  {column.render(item)}
-                </TableCell>
-              ))}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map(column => {
+                const isActionsColumn = column.key === 'actions'
+                return (
+                  <TableHead
+                    key={column.key}
+                    className={`whitespace-nowrap ${isActionsColumn ? 'sticky right-0 bg-card z-10 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)] dark:shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.3)]' : ''} ${column.className || ''}`}
+                  >
+                    {column.header}
+                  </TableHead>
+                )
+              })}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.map(item => (
+              <TableRow key={item.id}>
+                {columns.map(column => {
+                  const isActionsColumn = column.key === 'actions'
+                  return (
+                    <TableCell
+                      key={column.key}
+                      className={`whitespace-nowrap ${isActionsColumn ? 'sticky right-0 bg-card z-10 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)] dark:shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.3)]' : ''} ${column.className || ''}`}
+                    >
+                      {column.render(item)}
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {pagination && onPageChange && (
-        <div className="flex items-center justify-between border-t px-6 py-4 gap-4 min-w-0">
-          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t px-4 sm:px-6 py-4 gap-4">
+          <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap text-center sm:text-left">
             共 {pagination.total} 条记录，第 {pagination.page} / {pagination.totalPages} 页
           </div>
           <div className="flex-shrink-0">

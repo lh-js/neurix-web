@@ -104,10 +104,10 @@ export function LoginForm({ onSubmit, loading, error }: LoginFormProps) {
   const displayLoading = loginMode === 'code' ? codeLoginLoading : loading
 
   return (
-    <div className="bg-card rounded-2xl shadow-xl p-8 md:p-10 space-y-8 border border-border">
+    <div className="bg-card rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 space-y-6 sm:space-y-8 border border-border">
       {/* Logo/Title */}
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold text-foreground tracking-tight">Neurix</h1>
+      <div className="text-center space-y-2 sm:space-y-3">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Neurix</h1>
       </div>
 
       {/* 登录方式切换 */}

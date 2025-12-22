@@ -13,7 +13,15 @@ interface SidebarGroupProps {
   isActive: (href: string) => boolean
 }
 
-export function SidebarGroup({ item, isOpen, onToggle, isActive }: SidebarGroupProps) {
+interface SidebarGroupProps {
+  item: GroupMenuItem
+  isOpen: boolean
+  onToggle: (groupId: string) => void
+  isActive: (href: string) => boolean
+  children?: React.ReactNode
+}
+
+export function SidebarGroup({ item, isOpen, onToggle, isActive, children }: SidebarGroupProps) {
   const Icon = item.icon
 
   return (
@@ -41,9 +49,10 @@ export function SidebarGroup({ item, isOpen, onToggle, isActive }: SidebarGroupP
         )}
       </CollapsibleTrigger>
       <CollapsibleContent className="mt-1 space-y-0.5 pl-7">
-        {item.children.map((child: LinkMenuItem) => (
-          <SidebarLink key={child.id} item={child} isActive={isActive} />
-        ))}
+        {children ||
+          item.children.map((child: LinkMenuItem) => (
+            <SidebarLink key={child.id} item={child} isActive={isActive} />
+          ))}
       </CollapsibleContent>
     </Collapsible>
   )
