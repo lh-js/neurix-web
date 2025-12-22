@@ -136,7 +136,7 @@ export default function AiCallRecordPage() {
         actions={
           <div className="flex items-center gap-2">
             <Select
-              value={status || 'all'}
+              value={status !== undefined ? status.toString() : 'all'}
               onValueChange={value =>
                 handleFilterChange(value === 'all' ? undefined : Number.parseInt(value, 10))
               }
