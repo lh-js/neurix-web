@@ -2,38 +2,72 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { aiChat, aiChatStream } from '@/service/api/auth'
 import { AIChatRequest, ChatMessage } from '@/service/types/auth'
 
-export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+interface UseChatProps {
+  messages: ChatMessage[]
+  onMessagesChange: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void
+}
+
+export function useChat({ messages, onMessagesChange }: UseChatProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const [useStream, setUseStream] = useState(true)
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState<string>('')
   const [streamingTimestamp, setStreamingTimestamp] = useState<number | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const previousMessagesRef = useRef<ChatMessage[]>([])
+
+  // 当消息列表变化时（可能是切换会话），清理流式状态
+  useEffect(() => {
+    // 如果消息列表完全改变（不是追加），说明切换了会话
+    if (
+      previousMessagesRef.current.length > 0 &&
+      messages.length > 0 &&
+      previousMessagesRef.current[0]?.id !== messages[0]?.id
+    ) {
+      // 切换会话时，停止当前请求并清理状态
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
+      setIsLoading(false)
+      setIsStreaming(false)
+      setCurrentStreamingMessage('')
+      setStreamingTimestamp(null)
+    }
+    previousMessagesRef.current = messages
+  }, [messages])
 
   // 添加用户消息
-  const addUserMessage = useCallback((content: string) => {
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content,
-      timestamp: Date.now(),
-    }
-    setMessages(prev => [...prev, userMessage])
-    return userMessage
-  }, [])
+  const addUserMessage = useCallback(
+    (content: string) => {
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content,
+        timestamp: Date.now(),
+      }
+      // 使用函数式更新，确保基于最新状态
+      onMessagesChange(prev => [...prev, userMessage])
+      return userMessage
+    },
+    [onMessagesChange]
+  )
 
   // 添加助手消息
-  const addAssistantMessage = useCallback((content: string) => {
-    const assistantMessage: ChatMessage = {
-      id: `assistant-${Date.now()}`,
-      role: 'assistant',
-      content,
-      timestamp: Date.now(),
-    }
-    setMessages(prev => [...prev, assistantMessage])
-    return assistantMessage
-  }, [])
+  const addAssistantMessage = useCallback(
+    (content: string) => {
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content,
+        timestamp: Date.now(),
+      }
+      // 使用函数式更新，确保基于最新状态
+      onMessagesChange(prev => [...prev, assistantMessage])
+      return assistantMessage
+    },
+    [onMessagesChange]
+  )
 
   // 发送消息
   const sendMessage = useCallback(
@@ -48,21 +82,14 @@ export function useChat() {
       abortControllerRef.current = new AbortController()
 
       // 添加用户消息
-      addUserMessage(content)
+      const userMessage = addUserMessage(content)
 
       setIsLoading(true)
       setCurrentStreamingMessage('')
 
       try {
-        // 构建请求数据
-        const chatMessages = messages.concat([
-          {
-            id: `user-${Date.now()}`,
-            role: 'user' as const,
-            content,
-            timestamp: Date.now(),
-          },
-        ])
+        // 构建请求数据 - 使用当前消息列表加上新添加的用户消息
+        const chatMessages = [...messages, userMessage]
 
         const requestData: AIChatRequest = {
           messages: chatMessages.map(msg => ({
@@ -135,10 +162,17 @@ export function useChat() {
 
     // 如果有正在流式的消息，添加到消息列表
     if (currentStreamingMessage) {
-      addAssistantMessage(currentStreamingMessage)
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: currentStreamingMessage,
+        timestamp: Date.now(),
+      }
+      // 使用函数式更新，确保基于最新状态
+      onMessagesChange(prev => [...prev, assistantMessage])
       setCurrentStreamingMessage('')
     }
-  }, [currentStreamingMessage, addAssistantMessage])
+  }, [currentStreamingMessage, onMessagesChange])
 
   // 切换流式模式
   const toggleStream = useCallback(() => {

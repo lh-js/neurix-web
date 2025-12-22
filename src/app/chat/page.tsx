@@ -4,26 +4,64 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Send, Square, User, Bot, Zap, ZapOff } from 'lucide-react'
+import { Send, Square, User, Bot, Zap, ZapOff, Menu, X } from 'lucide-react'
 import { useChat } from '@/hooks/chat/use-chat'
+import { useChatSessions } from '@/hooks/chat/use-chat-sessions'
+import { SessionList } from '@/components/chat/session-list'
 import { ChatMessage } from '@/service/types/auth'
 
 export default function ChatPage() {
   const {
-    messages,
+    sessions,
+    currentSession,
+    currentSessionId,
+    createSession,
+    deleteSession,
+    switchSession,
+    updateSessionMessages,
+    updateSessionTitle,
+  } = useChatSessions()
+
+  const messages = currentSession?.messages || []
+  const [inputValue, setInputValue] = useState('')
+  const [mobileSessionListOpen, setMobileSessionListOpen] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const messagesRef = useRef<ChatMessage[]>(messages)
+
+  // 同步 messages 到 ref
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
+  // 当会话切换时，确保有当前会话
+  useEffect(() => {
+    if (!currentSessionId && sessions.length === 0) {
+      createSession()
+    }
+  }, [currentSessionId, sessions.length, createSession])
+
+  const {
     isLoading,
     isStreaming,
     useStream,
     currentStreamingMessage,
     streamingTimestamp,
-    sendMessage,
+    sendMessage: sendChatMessage,
     stopGeneration,
     toggleStream,
-  } = useChat()
-
-  const [inputValue, setInputValue] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  } = useChat({
+    messages,
+    onMessagesChange: (newMessagesOrUpdater) => {
+      if (currentSessionId) {
+        // 处理函数式更新，使用 ref 确保获取最新状态
+        const newMessages = typeof newMessagesOrUpdater === 'function' 
+          ? newMessagesOrUpdater(messagesRef.current)
+          : newMessagesOrUpdater
+        updateSessionMessages(currentSessionId, newMessages)
+      }
+    },
+  })
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -36,11 +74,11 @@ export default function ChatPage() {
 
   // 处理发送消息
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return
+    if (!inputValue.trim() || isLoading || !currentSessionId) return
 
     const message = inputValue.trim()
     setInputValue('')
-    await sendMessage(message)
+    await sendChatMessage(message)
 
     // 聚焦输入框
     setTimeout(() => {
@@ -110,8 +148,55 @@ export default function ChatPage() {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* 移动端会话列表遮罩 */}
+        {mobileSessionListOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setMobileSessionListOpen(false)}
+          />
+        )}
+
+        {/* 会话列表侧边栏 */}
+        <div
+          className={`${
+            mobileSessionListOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 border-r border-border/40 flex-shrink-0 bg-background transition-transform duration-300`}
+        >
+          <SessionList
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            onSelectSession={(id) => {
+              switchSession(id)
+              setMobileSessionListOpen(false)
+            }}
+            onCreateSession={() => {
+              createSession()
+              setMobileSessionListOpen(false)
+            }}
+            onDeleteSession={deleteSession}
+            onUpdateTitle={updateSessionTitle}
+          />
+        </div>
+
+        {/* 聊天内容区域 */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* 移动端会话列表按钮 */}
+          <div className="md:hidden p-2 border-b border-border/40 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileSessionListOpen(true)}
+              className="h-8 w-8"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+            <div className="flex-1 text-sm font-medium truncate">
+              {currentSession?.title || '新对话'}
+            </div>
+          </div>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4">
         <div className="max-w-4xl mx-auto py-6">
           {messages.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
@@ -236,6 +321,8 @@ export default function ChatPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>
