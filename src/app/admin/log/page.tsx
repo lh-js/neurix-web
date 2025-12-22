@@ -162,10 +162,10 @@ export default function LogPage() {
                         selectedLog.level === 'error'
                           ? 'bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400'
                           : selectedLog.level === 'warn'
-                          ? 'bg-yellow-500/10 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400'
-                          : selectedLog.level === 'info'
-                          ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                          : 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                            ? 'bg-yellow-500/10 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400'
+                            : selectedLog.level === 'info'
+                              ? 'bg-green-500/10 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+                              : 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
                       }`}
                     >
                       {selectedLog.level.toUpperCase()}

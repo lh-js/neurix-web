@@ -1,4 +1,4 @@
-import { Home, User, Shield, Settings, FileText, Mail, Key, LogIn } from 'lucide-react'
+import { Home, User, Shield, FileText, Mail, Key, LogIn } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -103,50 +103,40 @@ export const sidebarMenuConfig: MenuItem[] = [
     ],
   },
   {
-    id: 'email-code-management',
+    id: 'log-management',
     type: 'group',
-    label: '验证码管理',
-    icon: Key,
+    label: '日志管理',
+    icon: FileText,
     defaultOpen: false,
-    activePaths: ['/admin/email-code'],
+    activePaths: ['/admin/email-code', '/admin/log', '/admin/email-record', '/admin/login-record'],
     children: [
       {
-        id: 'email-code-management-link',
+        id: 'system-log',
         type: 'link',
-        label: '验证码管理',
-        icon: Key,
-        href: '/admin/email-code',
-      },
-    ],
-  },
-  {
-    id: 'system-management',
-    type: 'group',
-    label: '系统管理',
-    icon: Settings,
-    defaultOpen: false,
-    activePaths: ['/admin/log', '/admin/email-record', '/admin/login-record'],
-    children: [
-      {
-        id: 'log-management',
-        type: 'link',
-        label: '日志管理',
+        label: '系统日志',
         icon: FileText,
         href: '/admin/log',
       },
       {
-        id: 'email-record-management',
+        id: 'login-log',
         type: 'link',
-        label: '邮件管理',
-        icon: Mail,
-        href: '/admin/email-record',
-      },
-      {
-        id: 'login-record-management',
-        type: 'link',
-        label: '登录记录',
+        label: '登录日志',
         icon: LogIn,
         href: '/admin/login-record',
+      },
+      {
+        id: 'email-code-log',
+        type: 'link',
+        label: '验证码日志',
+        icon: Key,
+        href: '/admin/email-code',
+      },
+      {
+        id: 'email-log',
+        type: 'link',
+        label: '邮件日志',
+        icon: Mail,
+        href: '/admin/email-record',
       },
     ],
   },
