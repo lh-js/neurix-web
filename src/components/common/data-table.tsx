@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useRef, useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -124,9 +124,46 @@ export function DataTable<T extends { id: number | string }>({
     )
   }
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false)
+
+  // 检测是否有横向滚动条
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollContainerRef.current) {
+        const hasScroll =
+          scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth
+        setHasHorizontalScroll(hasScroll)
+      }
+    }
+
+    // 初始检查
+    checkScroll()
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkScroll)
+    // 监听表格内容变化（使用 ResizeObserver）
+    const resizeObserver = new ResizeObserver(checkScroll)
+    if (scrollContainerRef.current) {
+      resizeObserver.observe(scrollContainerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkScroll)
+      resizeObserver.disconnect()
+    }
+  }, [data, columns])
+
+  const getActionsColumnClass = (isActionsColumn: boolean) => {
+    if (!isActionsColumn) return ''
+    return hasHorizontalScroll
+      ? 'sticky right-0 bg-card z-10 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)] dark:shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.3)]'
+      : ''
+  }
+
   return (
     <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
+      <div ref={scrollContainerRef} className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -135,7 +172,7 @@ export function DataTable<T extends { id: number | string }>({
                 return (
                   <TableHead
                     key={column.key}
-                    className={`whitespace-nowrap ${isActionsColumn ? 'sticky right-0 bg-card z-10 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)] dark:shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.3)]' : ''} ${column.className || ''}`}
+                    className={`whitespace-nowrap ${getActionsColumnClass(isActionsColumn)} ${column.className || ''}`}
                   >
                     {column.header}
                   </TableHead>
@@ -151,7 +188,7 @@ export function DataTable<T extends { id: number | string }>({
                   return (
                     <TableCell
                       key={column.key}
-                      className={`whitespace-nowrap ${isActionsColumn ? 'sticky right-0 bg-card z-10 shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.1)] dark:shadow-[inset_4px_0_8px_-4px_rgba(0,0,0,0.3)]' : ''} ${column.className || ''}`}
+                      className={`whitespace-nowrap ${getActionsColumnClass(isActionsColumn)} ${column.className || ''}`}
                     >
                       {column.render(item)}
                     </TableCell>
