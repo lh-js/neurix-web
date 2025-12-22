@@ -100,9 +100,7 @@ export function SessionList({
                   <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{session.title}</div>
-                    <div className="text-xs mt-1 opacity-70">
-                      {formatTime(session.updatedAt)}
-                    </div>
+                    <div className="text-xs mt-1 opacity-70">{formatTime(session.updatedAt)}</div>
                   </div>
                 </div>
                 {/* 操作按钮 */}
@@ -131,7 +129,10 @@ export function SessionList({
       </div>
 
       {/* 编辑标题对话框 */}
-      <Dialog open={editingSessionId !== null} onOpenChange={open => !open && setEditingSessionId(null)}>
+      <Dialog
+        open={editingSessionId !== null}
+        onOpenChange={open => !open && setEditingSessionId(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>编辑会话标题</DialogTitle>
@@ -165,4 +166,3 @@ export function SessionList({
     </div>
   )
 }
-
