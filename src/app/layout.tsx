@@ -1,11 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
-// 必须在任何 Radix UI 组件之前导入，修复 MutationObserver 错误
-import '@/lib/mutation-observer-polyfill'
-import Script from 'next/script'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
-import { ClientOnly } from '@/components/providers/client-only'
 
 export const metadata: Metadata = {
   title: 'Neurix',
@@ -20,44 +16,31 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <Script
-          id="suppress-console-errors"
-          strategy="beforeInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                if (typeof window === 'undefined') return;
-                var noop = function() {};
-                var originalError = console.error;
-                console.error = noop;
-                window.addEventListener('error', function(e) {
-                  e.preventDefault();
-                  return true;
-                }, { capture: true });
-                window.addEventListener('unhandledrejection', function(e) {
-                  e.preventDefault();
-                  return true;
-                }, { capture: true });
-              })();
-            `,
-          }}
-        />
-        <Script
-          id="theme-bootstrap"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // 立即处理主题，避免闪烁
                 try {
-                  var theme = localStorage.getItem('neurix-theme');
-                  var isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
+                  const theme = localStorage.getItem('neurix-theme');
+                  let isDark = false;
+                  
+                  if (theme === 'dark') {
+                    isDark = true;
+                  } else if (theme === 'light') {
+                    isDark = false;
+                  } else {
+                    // system 或未设置，根据系统主题决定
+                    isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  }
+                  
+                  // 立即应用主题，避免闪烁
                   if (isDark) {
                     document.documentElement.classList.add('dark');
                   } else {
                     document.documentElement.classList.remove('dark');
                   }
+                  
+                  // 设置标志，告诉 ThemeProvider 已经应用了主题
                   document.documentElement.setAttribute('data-theme-applied', 'true');
                 } catch (e) {
                   document.documentElement.classList.remove('dark');
@@ -69,12 +52,10 @@ export default function RootLayout({
         />
       </head>
       <body className="h-screen flex flex-col bg-background">
-        <ClientOnly>
-          <ThemeProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
-            <ThemedToaster />
-          </ThemeProvider>
-        </ClientOnly>
+        <ThemeProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+          <ThemedToaster />
+        </ThemeProvider>
       </body>
     </html>
   )
