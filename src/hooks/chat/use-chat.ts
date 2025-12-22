@@ -1,13 +1,21 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { aiChat, aiChatStream } from '@/service/api/auth'
-import { AIChatRequest, ChatMessage } from '@/service/types/auth'
+import { AIChatRequest } from '@/service/types/auth'
+import { ChatMessage } from '@/service/types/chat-message'
 
 interface UseChatProps {
   messages: ChatMessage[]
+  conversationId?: number // 会话ID，用于自动保存
   onMessagesChange: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void
+  onMessageSaved?: () => void // 消息保存完成后的回调（用于刷新消息列表）
 }
 
-export function useChat({ messages, onMessagesChange }: UseChatProps) {
+export function useChat({
+  messages,
+  conversationId,
+  onMessagesChange,
+  onMessageSaved,
+}: UseChatProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isStreaming, setIsStreaming] = useState(false)
   const [useStream, setUseStream] = useState(true)
@@ -19,10 +27,11 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
   // 当消息列表变化时（可能是切换会话），清理流式状态
   useEffect(() => {
     // 如果消息列表完全改变（不是追加），说明切换了会话
+    // 通过 conversationId 来判断，因为不同会话的消息 conversationId 不同
     if (
       previousMessagesRef.current.length > 0 &&
       messages.length > 0 &&
-      previousMessagesRef.current[0]?.id !== messages[0]?.id
+      previousMessagesRef.current[0]?.conversationId !== messages[0]?.conversationId
     ) {
       // 切换会话时，停止当前请求并清理状态
       if (abortControllerRef.current) {
@@ -37,36 +46,38 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
     previousMessagesRef.current = messages
   }, [messages])
 
-  // 添加用户消息
+  // 添加用户消息（临时消息，等待后端保存后替换）
   const addUserMessage = useCallback(
     (content: string) => {
       const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
+        id: 0, // 临时ID，后端保存后会更新
+        conversationId: conversationId || 0,
         role: 'user',
         content,
-        timestamp: Date.now(),
+        createTime: new Date().toISOString(),
       }
       // 使用函数式更新，确保基于最新状态
       onMessagesChange(prev => [...prev, userMessage])
       return userMessage
     },
-    [onMessagesChange]
+    [onMessagesChange, conversationId]
   )
 
-  // 添加助手消息
+  // 添加助手消息（临时消息，等待后端保存后替换）
   const addAssistantMessage = useCallback(
     (content: string) => {
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: 0, // 临时ID，后端保存后会更新
+        conversationId: conversationId || 0,
         role: 'assistant',
         content,
-        timestamp: Date.now(),
+        createTime: new Date().toISOString(),
       }
       // 使用函数式更新，确保基于最新状态
       onMessagesChange(prev => [...prev, assistantMessage])
       return assistantMessage
     },
-    [onMessagesChange]
+    [onMessagesChange, conversationId]
   )
 
   // 发送消息
@@ -97,6 +108,7 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
             content: msg.content,
           })),
           stream: useStream,
+          conversationId, // 传递会话ID，后端会自动保存消息
         }
 
         if (useStream) {
@@ -121,6 +133,12 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
               setStreamingTimestamp(null)
               if (fullContent) {
                 addAssistantMessage(fullContent)
+                // 延迟刷新消息列表，确保后端已保存
+                if (onMessageSaved) {
+                  setTimeout(() => {
+                    onMessageSaved()
+                  }, 500)
+                }
               }
               setCurrentStreamingMessage('')
             }
@@ -130,6 +148,12 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
           const response = await aiChat(requestData)
           const content = response.choices[0]?.message?.content || ''
           addAssistantMessage(content)
+          // 延迟刷新消息列表，确保后端已保存
+          if (onMessageSaved) {
+            setTimeout(() => {
+              onMessageSaved()
+            }, 500)
+          }
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -147,7 +171,7 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
         abortControllerRef.current = null
       }
     },
-    [messages, useStream, addUserMessage, addAssistantMessage, isLoading]
+    [messages, useStream, addUserMessage, addAssistantMessage, isLoading, conversationId, onMessageSaved]
   )
 
   // 停止生成
@@ -163,16 +187,17 @@ export function useChat({ messages, onMessagesChange }: UseChatProps) {
     // 如果有正在流式的消息，添加到消息列表
     if (currentStreamingMessage) {
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: 0, // 临时ID，后端保存后会更新
+        conversationId: conversationId || 0,
         role: 'assistant',
         content: currentStreamingMessage,
-        timestamp: Date.now(),
+        createTime: new Date().toISOString(),
       }
       // 使用函数式更新，确保基于最新状态
       onMessagesChange(prev => [...prev, assistantMessage])
       setCurrentStreamingMessage('')
     }
-  }, [currentStreamingMessage, onMessagesChange])
+  }, [currentStreamingMessage, onMessagesChange, conversationId])
 
   // 切换流式模式
   const toggleStream = useCallback(() => {

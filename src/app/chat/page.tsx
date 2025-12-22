@@ -5,16 +5,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Send, Square, User, Bot, Zap, ZapOff, Menu } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
 import { useChat } from '@/hooks/chat/use-chat'
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions'
 import { SessionList } from '@/components/chat/session-list'
-import { ChatMessage } from '@/service/types/auth'
+import { ChatMessage } from '@/service/types/chat-message'
 
 export default function ChatPage() {
   const {
     sessions,
     currentSession,
     currentSessionId,
+    loading: sessionsLoading,
+    loadingMessages,
+    deletingSessionId,
+    creatingSession,
+    updatingTitleSessionId,
     createSession,
     deleteSession,
     switchSession,
@@ -29,17 +35,14 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
 
-  // 同步 messages 到 ref
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
-
   // 当会话切换时，确保有当前会话
   useEffect(() => {
-    if (!currentSessionId && sessions.length === 0) {
-      createSession()
+    if (!currentSessionId && sessions.length === 0 && !sessionsLoading) {
+      createSession().catch(() => {
+        // 创建失败时静默处理，避免无限循环
+      })
     }
-  }, [currentSessionId, sessions.length, createSession])
+  }, [currentSessionId, sessions.length, sessionsLoading, createSession])
 
   const {
     isLoading,
@@ -52,6 +55,7 @@ export default function ChatPage() {
     toggleStream,
   } = useChat({
     messages,
+    conversationId: currentSessionId || undefined,
     onMessagesChange: newMessagesOrUpdater => {
       if (currentSessionId) {
         // 处理函数式更新，使用 ref 确保获取最新状态
@@ -59,10 +63,36 @@ export default function ChatPage() {
           typeof newMessagesOrUpdater === 'function'
             ? newMessagesOrUpdater(messagesRef.current)
             : newMessagesOrUpdater
+        // 由于使用了自动保存，这里只需要更新本地状态
+        // 后端会自动保存，我们只需要刷新消息列表
         updateSessionMessages(currentSessionId, newMessages)
       }
     },
+    onMessageSaved: () => {
+      // AI 响应完成后，updateSessionMessages 已经会刷新消息列表
+      // 这里不需要额外操作，避免重复调用
+    },
   })
+
+  // 同步 messages 到 ref
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
+  // 使用 useMemo 派生流式消息的 key 和时间
+  const streamingKey = useMemo(() => {
+    if (streamingTimestamp !== null && currentSessionId) {
+      return `streaming-${currentSessionId}-${streamingTimestamp}`
+    }
+    return `streaming-${currentSessionId || 'none'}`
+  }, [streamingTimestamp, currentSessionId])
+
+  const streamingCreateTime = useMemo(() => {
+    if (streamingTimestamp !== null) {
+      return new Date(streamingTimestamp).toISOString()
+    }
+    return new Date().toISOString()
+  }, [streamingTimestamp])
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -95,14 +125,13 @@ export default function ChatPage() {
     }
   }
 
-  // 渲染消息
+  // 渲染消息（不包含 key，key 在 map 中处理）
   const renderMessage = (message: ChatMessage, isStreamingMessage = false) => {
     const isUser = message.role === 'user'
     const content = isStreamingMessage ? currentStreamingMessage : message.content
 
     return (
       <div
-        key={message.id}
         className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
       >
         {!isUser && (
@@ -129,7 +158,7 @@ export default function ChatPage() {
             </div>
           </div>
           <div className="text-xs text-muted-foreground px-2">
-            {new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+            {new Date(message.createTime).toLocaleTimeString('zh-CN', {
               hour: '2-digit',
               minute: '2-digit',
             })}
@@ -167,6 +196,11 @@ export default function ChatPage() {
           <SessionList
             sessions={sessions}
             currentSessionId={currentSessionId}
+            loading={sessionsLoading}
+            loadingMessages={loadingMessages}
+            deletingSessionId={deletingSessionId}
+            creatingSession={creatingSession}
+            updatingTitleSessionId={updatingTitleSessionId}
             onSelectSession={id => {
               switchSession(id)
               setMobileSessionListOpen(false)
@@ -199,7 +233,14 @@ export default function ChatPage() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4">
             <div className="max-w-4xl mx-auto py-6">
-              {messages.length === 0 && !isLoading ? (
+              {currentSessionId &&
+              loadingMessages.has(currentSessionId) &&
+              messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                  <Spinner className="h-8 w-8 mb-4" />
+                  <p className="text-muted-foreground">加载消息中...</p>
+                </div>
+              ) : messages.length === 0 && !isLoading && !sessionsLoading ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <Bot className="w-8 h-8 text-primary" />
@@ -211,20 +252,37 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.map(message => renderMessage(message))}
+                  {messages.map((message, index) => {
+                    // 为每个消息生成唯一的 key
+                    const messageKey =
+                      message.id > 0
+                        ? `msg-${message.id}`
+                        : `temp-${index}-${message.role}-${message.createTime}-${message.content.slice(0, 20)}`
+                    return (
+                      <div key={messageKey}>
+                        {renderMessage(message, false)}
+                      </div>
+                    )
+                  })}
 
-                  {/* 流式消息 */}
+                  {/* 流式消息 - 只在没有对应的助手消息时显示 */}
                   {isStreaming &&
                     currentStreamingMessage &&
-                    renderMessage(
-                      {
-                        id: 'streaming',
-                        role: 'assistant',
-                        content: currentStreamingMessage,
-                        timestamp:
-                          streamingTimestamp ?? messages[messages.length - 1]?.timestamp ?? 0,
-                      },
-                      true
+                    !messages.some(
+                      msg => msg.role === 'assistant' && msg.id === 0 && msg.content === currentStreamingMessage
+                    ) && (
+                      <div key={streamingKey}>
+                        {renderMessage(
+                          {
+                            id: -1, // 使用 -1 作为流式消息的特殊 ID
+                            conversationId: currentSessionId || 0,
+                            role: 'assistant',
+                            content: currentStreamingMessage,
+                            createTime: streamingCreateTime,
+                          },
+                          true
+                        )}
+                      </div>
                     )}
 
                   {/* 加载状态 - 只在非流式模式或流式开始前显示 */}

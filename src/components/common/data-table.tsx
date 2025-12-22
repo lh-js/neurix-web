@@ -56,6 +56,33 @@ export function DataTable<T extends { id: number | string }>({
   emptyIcon,
   loadingRows = 5,
 }: DataTableProps<T>) {
+  // Hooks 必须在任何条件返回之前调用
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false)
+
+  // 检测是否有横向滚动条
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollContainerRef.current) {
+        const hasScroll =
+          scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth
+        setHasHorizontalScroll(hasScroll)
+      }
+    }
+
+    checkScroll()
+    window.addEventListener('resize', checkScroll)
+    const observer = new ResizeObserver(checkScroll)
+    if (scrollContainerRef.current) {
+      observer.observe(scrollContainerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkScroll)
+      observer.disconnect()
+    }
+  }, [data])
+
   const getPageNumbers = (): (number | 'ellipsis')[] => {
     if (!pagination || pagination.totalPages === 0) return []
 
@@ -123,36 +150,6 @@ export function DataTable<T extends { id: number | string }>({
       </div>
     )
   }
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false)
-
-  // 检测是否有横向滚动条
-  useEffect(() => {
-    const checkScroll = () => {
-      if (scrollContainerRef.current) {
-        const hasScroll =
-          scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth
-        setHasHorizontalScroll(hasScroll)
-      }
-    }
-
-    // 初始检查
-    checkScroll()
-
-    // 监听窗口大小变化
-    window.addEventListener('resize', checkScroll)
-    // 监听表格内容变化（使用 ResizeObserver）
-    const resizeObserver = new ResizeObserver(checkScroll)
-    if (scrollContainerRef.current) {
-      resizeObserver.observe(scrollContainerRef.current)
-    }
-
-    return () => {
-      window.removeEventListener('resize', checkScroll)
-      resizeObserver.disconnect()
-    }
-  }, [data, columns])
 
   const getActionsColumnClass = (isActionsColumn: boolean) => {
     if (!isActionsColumn) return ''

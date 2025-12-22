@@ -122,6 +122,7 @@ export interface AIChatRequest {
   }>
   model?: string
   stream?: boolean
+  conversationId?: number // 会话ID，提供后会自动保存消息
 }
 
 /**
