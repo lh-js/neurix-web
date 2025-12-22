@@ -1,4 +1,4 @@
-import { Home, User, Shield, FileText, Mail, Key, LogIn } from 'lucide-react'
+import { Home, User, Shield, FileText, Mail, Key, LogIn, UserPlus } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -108,7 +108,13 @@ export const sidebarMenuConfig: MenuItem[] = [
     label: '日志管理',
     icon: FileText,
     defaultOpen: false,
-    activePaths: ['/admin/email-code', '/admin/log', '/admin/email-record', '/admin/login-record'],
+    activePaths: [
+      '/admin/email-code',
+      '/admin/log',
+      '/admin/email-record',
+      '/admin/login-record',
+      '/admin/register-record',
+    ],
     children: [
       {
         id: 'system-log',
@@ -123,6 +129,13 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '登录日志',
         icon: LogIn,
         href: '/admin/login-record',
+      },
+      {
+        id: 'register-log',
+        type: 'link',
+        label: '注册日志',
+        icon: UserPlus,
+        href: '/admin/register-record',
       },
       {
         id: 'email-code-log',
