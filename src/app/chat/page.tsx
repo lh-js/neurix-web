@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { useChat } from '@/hooks/chat/use-chat'
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions'
 import { SessionList } from '@/components/chat/session-list'
+import { MarkdownContent } from '@/components/chat/markdown-content'
 import { ChatMessage } from '@/service/types/chat-message'
 
 export default function ChatPage() {
@@ -131,11 +132,16 @@ export default function ChatPage() {
     const content = isStreamingMessage ? currentStreamingMessage : message.content
 
     return (
-      <div className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`flex gap-3 mb-4 animate-message-in ${isUser ? 'justify-end' : 'justify-start'}`}
+      >
         {!isUser && (
-          <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarFallback className="bg-primary/10 text-primary">
+          <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
+            <AvatarFallback className="bg-primary/10 text-primary relative overflow-visible">
               <Bot className="w-4 h-4" />
+              {isStreamingMessage && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
+              )}
             </AvatarFallback>
           </Avatar>
         )}
@@ -144,18 +150,30 @@ export default function ChatPage() {
           className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}
         >
           <div
-            className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-2 ${
-              isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
+            className={`group relative rounded-2xl px-3 py-2 sm:px-4 sm:py-2 transition-all duration-300 ${
+              isUser
+                ? 'bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02]'
+                : 'bg-muted hover:bg-muted/80 shadow-sm hover:shadow-md'
             }`}
           >
-            <div className="whitespace-pre-wrap break-words text-sm sm:text-base">
-              {content}
+            {/* 用户消息的光晕效果 */}
+            {isUser && (
+              <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
+            )}
+            <div className="break-words text-sm sm:text-base relative z-10">
+              {isUser ? (
+                // 用户消息保持纯文本，不渲染 Markdown
+                <div className="whitespace-pre-wrap">{content}</div>
+              ) : (
+                // AI 消息支持 Markdown
+                <MarkdownContent content={content} />
+              )}
               {isStreamingMessage && (
                 <span className="inline-block w-0.5 h-5 bg-current animate-pulse ml-0.5" />
               )}
             </div>
           </div>
-          <div className="text-xs text-muted-foreground px-2">
+          <div className="text-xs text-muted-foreground px-2 animate-fade-in">
             {new Date(message.createTime).toLocaleTimeString('zh-CN', {
               hour: '2-digit',
               minute: '2-digit',
@@ -164,7 +182,7 @@ export default function ChatPage() {
         </div>
 
         {isUser && (
-          <Avatar className="w-8 h-8 flex-shrink-0">
+          <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
             <AvatarFallback className="bg-secondary text-secondary-foreground">
               <User className="w-4 h-4" />
             </AvatarFallback>
@@ -175,8 +193,17 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="flex-1 flex overflow-hidden relative">
+    <div className="h-full flex flex-col bg-background relative overflow-hidden">
+      {/* 背景装饰效果 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" />
+        <div
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="flex-1 flex overflow-hidden relative z-10">
         {/* 移动端会话列表遮罩 */}
         {mobileSessionListOpen && (
           <div
@@ -229,7 +256,9 @@ export default function ChatPage() {
             </div>
           </div>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4">
+          <div className="flex-1 overflow-y-auto px-4 relative">
+            {/* 渐变遮罩效果 */}
+            <div className="sticky top-0 h-8 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
             <div className="max-w-4xl mx-auto py-6">
               {currentSessionId &&
               loadingMessages.has(currentSessionId) &&
@@ -239,9 +268,10 @@ export default function ChatPage() {
                   <p className="text-muted-foreground">加载消息中...</p>
                 </div>
               ) : messages.length === 0 && !isLoading && !sessionsLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Bot className="w-8 h-8 text-primary" />
+                <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-fade-in">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 animate-float relative">
+                    <Bot className="w-8 h-8 text-primary relative z-10" />
+                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">开始对话</h3>
                   <p className="text-muted-foreground max-w-sm">
@@ -284,27 +314,28 @@ export default function ChatPage() {
 
                   {/* 加载状态 - 只在非流式模式或流式开始前显示 */}
                   {isLoading && !isStreaming && (
-                    <div className="flex gap-3 mb-4 justify-start">
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        <AvatarFallback className="bg-primary/10 text-primary">
+                    <div className="flex gap-3 mb-4 justify-start animate-message-in">
+                      <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
+                        <AvatarFallback className="bg-primary/10 text-primary relative">
                           <Bot className="w-4 h-4" />
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col gap-1">
-                        <div className="bg-muted rounded-2xl px-4 py-2">
-                          <div className="flex items-center gap-1">
+                        <div className="bg-muted rounded-2xl px-4 py-2 shadow-sm animate-pulse">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">正在思考</span>
                             <div className="flex gap-1">
                               <div
-                                className="w-1 h-1 bg-current rounded-full animate-bounce"
+                                className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
                                 style={{ animationDelay: '0ms' }}
                               />
                               <div
-                                className="w-1 h-1 bg-current rounded-full animate-bounce"
+                                className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
                                 style={{ animationDelay: '150ms' }}
                               />
                               <div
-                                className="w-1 h-1 bg-current rounded-full animate-bounce"
+                                className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
                                 style={{ animationDelay: '300ms' }}
                               />
                             </div>
@@ -321,11 +352,13 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative">
+            {/* 输入框区域的渐变效果 */}
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none" />
+            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 relative z-10">
               <div className="max-w-4xl mx-auto">
                 <div className="flex gap-2 sm:gap-3">
-                  <div className="flex-1 relative">
+                  <div className="flex-1 relative group">
                     <Input
                       ref={inputRef}
                       value={inputValue}
@@ -333,8 +366,10 @@ export default function ChatPage() {
                       onKeyPress={handleKeyPress}
                       placeholder="输入您的问题..."
                       disabled={isLoading}
-                      className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-sm sm:text-base"
+                      className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-sm sm:text-base transition-all duration-300 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 group-hover:border-primary/30"
                     />
+                    {/* 输入框聚焦时的光晕效果 */}
+                    <div className="absolute inset-0 rounded-md bg-primary/0 group-focus-within:bg-primary/5 blur-xl transition-all duration-300 pointer-events-none -z-10" />
                   </div>
 
                   <Button
@@ -362,9 +397,19 @@ export default function ChatPage() {
                     onClick={isLoading ? stopGeneration : handleSendMessage}
                     disabled={!inputValue.trim() && !isLoading}
                     size="lg"
-                    className="px-4 sm:px-6"
+                    className="px-4 sm:px-6 relative overflow-hidden group/btn transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
                   >
-                    {isLoading ? <Square className="w-5 h-5" /> : <Send className="w-5 h-5" />}
+                    {isLoading ? (
+                      <>
+                        <Square className="w-5 h-5 relative z-10" />
+                        <span className="absolute inset-0 bg-primary/20 animate-pulse" />
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 relative z-10 transition-transform group-hover/btn:translate-x-0.5" />
+                        <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                      </>
+                    )}
                   </Button>
                 </div>
 
