@@ -30,17 +30,12 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
         rehypePlugins={[rehypeHighlight]}
         components={{
           // 自定义代码块样式
-          code({
-            inline,
-            className,
-            children,
-            ...props
-          }: {
-            inline?: boolean
-            className?: string
-            children?: React.ReactNode
-            [key: string]: unknown
-          }) {
+          code(props) {
+            const { inline, className, children, ...rest } = props as {
+              inline?: boolean
+              className?: string
+              children?: React.ReactNode
+            }
             const match = /language-(\w+)/.exec(className || '')
             // 更健壮地获取代码文本，避免出现 [object Object]
             const codeText = Array.isArray(children)
@@ -70,7 +65,7 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
                 </div>
 
                 <pre className="overflow-x-auto rounded-lg text-sm hljs">
-                  <code className={`${className || ''} hljs`} {...props}>
+                  <code className={`${className || ''} hljs`} {...rest}>
                     {children}
                   </code>
                 </pre>
