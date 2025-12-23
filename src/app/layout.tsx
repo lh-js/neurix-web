@@ -14,8 +14,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning className="no-js">
       <head>
+        {/* 立即移除 no-js 类，表示 JavaScript 已启用 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.remove('no-js');`,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
