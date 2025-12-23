@@ -50,7 +50,6 @@ export function SessionList({
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null)
   const previousUpdatingTitleSessionIdRef = useRef<number | null>(null)
 
-
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -116,12 +115,7 @@ export function SessionList({
     <div className="flex flex-col h-full bg-background border-r border-border/40">
       {/* 新建会话按钮 */}
       <div className="p-4 border-b border-border/40">
-        <Button
-          onClick={onCreateSession}
-          className="w-full"
-          size="sm"
-          disabled={creatingSession}
-        >
+        <Button onClick={onCreateSession} className="w-full" size="sm" disabled={creatingSession}>
           {creatingSession ? (
             <>
               <Spinner className="h-4 w-4 mr-2" />
@@ -162,11 +156,11 @@ export function SessionList({
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <div className="font-medium text-sm flex items-center gap-2">
                         <span className="truncate block">{session.title}</span>
-                        {isLoadingMessages && (
-                          <Spinner className="h-3 w-3 flex-shrink-0" />
-                        )}
+                        {isLoadingMessages && <Spinner className="h-3 w-3 flex-shrink-0" />}
                       </div>
-                      <div className="text-xs mt-1 opacity-70 truncate">{formatTime(session.updatedAt)}</div>
+                      <div className="text-xs mt-1 opacity-70 truncate">
+                        {formatTime(session.updatedAt)}
+                      </div>
                     </div>
                   </div>
                   {/* 操作按钮 */}
@@ -216,46 +210,46 @@ export function SessionList({
             <DialogTitle>编辑会话标题</DialogTitle>
             <DialogDescription>为这个会话设置一个标题</DialogDescription>
           </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">标题</Label>
-                  <Input
-                    id="title"
-                    value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
-                    onKeyPress={e => {
-                      if (e.key === 'Enter' && !updatingTitleSessionId) {
-                        handleSaveEdit()
-                      }
-                    }}
-                    placeholder="输入会话标题"
-                    autoFocus
-                    disabled={updatingTitleSessionId !== null}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingSessionId(null)
-                    setEditTitle('')
-                  }}
-                  disabled={updatingTitleSessionId !== null}
-                >
-                  取消
-                </Button>
-                <Button onClick={handleSaveEdit} disabled={updatingTitleSessionId !== null}>
-                  {updatingTitleSessionId !== null ? (
-                    <>
-                      <Spinner className="mr-2 h-4 w-4" />
-                      保存中...
-                    </>
-                  ) : (
-                    '保存'
-                  )}
-                </Button>
-              </DialogFooter>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">标题</Label>
+              <Input
+                id="title"
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                onKeyPress={e => {
+                  if (e.key === 'Enter' && !updatingTitleSessionId) {
+                    handleSaveEdit()
+                  }
+                }}
+                placeholder="输入会话标题"
+                autoFocus
+                disabled={updatingTitleSessionId !== null}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingSessionId(null)
+                setEditTitle('')
+              }}
+              disabled={updatingTitleSessionId !== null}
+            >
+              取消
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={updatingTitleSessionId !== null}>
+              {updatingTitleSessionId !== null ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  保存中...
+                </>
+              ) : (
+                '保存'
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

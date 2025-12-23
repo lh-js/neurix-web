@@ -59,4 +59,3 @@ export async function updateConversation(
 export async function deleteConversation(id: number): Promise<void> {
   await del(`/chat-conversation/${id}`)
 }
-

@@ -35,4 +35,3 @@ export interface BatchCreateMessageRequest {
 export interface GetMessagesParams {
   conversationId: number
 }
-

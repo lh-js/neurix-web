@@ -131,9 +131,7 @@ export default function ChatPage() {
     const content = isStreamingMessage ? currentStreamingMessage : message.content
 
     return (
-      <div
-        className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
-      >
+      <div className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
         {!isUser && (
           <Avatar className="w-8 h-8 flex-shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary">
@@ -258,18 +256,17 @@ export default function ChatPage() {
                       message.id > 0
                         ? `msg-${message.id}`
                         : `temp-${index}-${message.role}-${message.createTime}-${message.content.slice(0, 20)}`
-                    return (
-                      <div key={messageKey}>
-                        {renderMessage(message, false)}
-                      </div>
-                    )
+                    return <div key={messageKey}>{renderMessage(message, false)}</div>
                   })}
 
                   {/* 流式消息 - 只在没有对应的助手消息时显示 */}
                   {isStreaming &&
                     currentStreamingMessage &&
                     !messages.some(
-                      msg => msg.role === 'assistant' && msg.id === 0 && msg.content === currentStreamingMessage
+                      msg =>
+                        msg.role === 'assistant' &&
+                        msg.id === 0 &&
+                        msg.content === currentStreamingMessage
                     ) && (
                       <div key={streamingKey}>
                         {renderMessage(

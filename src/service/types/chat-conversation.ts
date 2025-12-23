@@ -41,4 +41,3 @@ export interface ConversationListResponse {
 export interface UpdateConversationRequest {
   title: string
 }
-

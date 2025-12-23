@@ -31,4 +31,3 @@ export async function getMessages(params: GetMessagesParams): Promise<ChatMessag
   })
   return response
 }
-

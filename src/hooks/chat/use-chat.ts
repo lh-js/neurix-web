@@ -171,7 +171,15 @@ export function useChat({
         abortControllerRef.current = null
       }
     },
-    [messages, useStream, addUserMessage, addAssistantMessage, isLoading, conversationId, onMessageSaved]
+    [
+      messages,
+      useStream,
+      addUserMessage,
+      addAssistantMessage,
+      isLoading,
+      conversationId,
+      onMessageSaved,
+    ]
   )
 
   // 停止生成

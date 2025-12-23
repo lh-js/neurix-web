@@ -165,28 +165,25 @@ export function useChatSessions() {
   // 更新会话消息（只更新本地状态，不触发后端刷新）
   // 由于使用了自动保存功能，后端会自动保存消息
   // 我们只在切换会话或首次加载时从后端加载消息
-  const updateSessionMessages = useCallback(
-    async (sessionId: number, messages: ChatMessage[]) => {
-      // 只更新本地状态以立即显示，不触发后端刷新
-      setSessions(prevSessions =>
-        prevSessions.map(session => {
-          if (session.id === sessionId) {
-            return {
-              ...session,
-              messages,
-              updatedAt: Date.now(),
-            }
+  const updateSessionMessages = useCallback(async (sessionId: number, messages: ChatMessage[]) => {
+    // 只更新本地状态以立即显示，不触发后端刷新
+    setSessions(prevSessions =>
+      prevSessions.map(session => {
+        if (session.id === sessionId) {
+          return {
+            ...session,
+            messages,
+            updatedAt: Date.now(),
           }
-          return session
-        })
-      )
-      // 不再自动刷新，因为：
-      // 1. 用户消息和AI响应已经通过本地状态显示
-      // 2. 后端会自动保存，不需要立即刷新
-      // 3. 只有在切换会话或首次加载时才需要从后端加载
-    },
-    []
-  )
+        }
+        return session
+      })
+    )
+    // 不再自动刷新，因为：
+    // 1. 用户消息和AI响应已经通过本地状态显示
+    // 2. 后端会自动保存，不需要立即刷新
+    // 3. 只有在切换会话或首次加载时才需要从后端加载
+  }, [])
 
   // 更新会话标题
   const updateSessionTitle = useCallback(async (sessionId: number, title: string) => {
@@ -195,9 +192,7 @@ export function useChatSessions() {
       await updateConversation(sessionId, { title })
       setSessions(prevSessions =>
         prevSessions.map(session =>
-          session.id === sessionId
-            ? { ...session, title, updatedAt: Date.now() }
-            : session
+          session.id === sessionId ? { ...session, title, updatedAt: Date.now() } : session
         )
       )
       toast.success('更新成功')
