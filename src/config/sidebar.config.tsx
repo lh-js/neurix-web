@@ -1,4 +1,15 @@
-import { Home, User, Shield, FileText, Mail, Key, LogIn, UserPlus, Bot } from 'lucide-react'
+import {
+  Home,
+  User,
+  Shield,
+  FileText,
+  Mail,
+  Key,
+  LogIn,
+  UserPlus,
+  Bot,
+  MessageSquare,
+} from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
 /**
@@ -115,6 +126,7 @@ export const sidebarMenuConfig: MenuItem[] = [
       '/admin/login-record',
       '/admin/register-record',
       '/admin/ai-call-record',
+      '/admin/chat-conversation',
     ],
     children: [
       {
@@ -158,6 +170,13 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: 'AI调用日志',
         icon: Bot,
         href: '/admin/ai-call-record',
+      },
+      {
+        id: 'chat-conversation-log',
+        type: 'link',
+        label: '聊天会话日志',
+        icon: MessageSquare,
+        href: '/admin/chat-conversation',
       },
     ],
   },
