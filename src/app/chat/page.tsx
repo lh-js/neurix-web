@@ -34,7 +34,6 @@ export default function ChatPage() {
   const [mobileSessionListOpen, setMobileSessionListOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const inputContainerRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
 
   // 当会话切换时，确保有当前会话
@@ -126,65 +125,6 @@ export default function ChatPage() {
       handleSendMessage()
     }
   }
-
-  // 处理输入框聚焦 - 确保移动端键盘弹出时输入框可见
-  const handleInputFocus = () => {
-    // 仅在移动端处理
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      // 延迟执行，等待键盘完全弹出
-      setTimeout(() => {
-        inputRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-          inline: 'nearest',
-        })
-      }, 300)
-    }
-  }
-
-  // 监听视口高度变化（键盘弹出/收起）
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    let initialViewportHeight = window.visualViewport?.height || window.innerHeight
-    let timeoutId: NodeJS.Timeout
-
-    const handleViewportResize = () => {
-      // 清除之前的定时器
-      clearTimeout(timeoutId)
-
-      // 如果输入框正在聚焦，且视口高度变小（键盘弹出），则滚动到输入框
-      if (
-        document.activeElement === inputRef.current &&
-        window.visualViewport &&
-        window.visualViewport.height < initialViewportHeight
-      ) {
-        timeoutId = setTimeout(() => {
-          inputRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'end',
-            inline: 'nearest',
-          })
-        }, 100)
-      }
-    }
-
-    // 使用 visualViewport API（更准确）或 resize 事件
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportResize)
-    } else {
-      window.addEventListener('resize', handleViewportResize)
-    }
-
-    return () => {
-      clearTimeout(timeoutId)
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportResize)
-      } else {
-        window.removeEventListener('resize', handleViewportResize)
-      }
-    }
-  }, [])
 
   // 渲染消息（不包含 key，key 在 map 中处理）
   const renderMessage = (message: ChatMessage, isStreamingMessage = false) => {
@@ -409,10 +349,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div
-            ref={inputContainerRef}
-            className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative"
-          >
+          <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative">
             {/* 输入框区域的渐变效果 */}
             <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none" />
             <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 relative z-10">
@@ -424,7 +361,6 @@ export default function ChatPage() {
                       value={inputValue}
                       onChange={e => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      onFocus={handleInputFocus}
                       placeholder="输入您的问题..."
                       disabled={isLoading}
                       className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-base transition-all duration-300 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 group-hover:border-primary/30"
