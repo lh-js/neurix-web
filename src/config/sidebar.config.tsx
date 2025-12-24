@@ -9,6 +9,7 @@ import {
   UserPlus,
   Bot,
   MessageSquare,
+  Route,
 } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 
@@ -127,6 +128,7 @@ export const sidebarMenuConfig: MenuItem[] = [
       '/admin/register-record',
       '/admin/ai-call-record',
       '/admin/chat-conversation',
+      '/admin/router',
     ],
     children: [
       {
@@ -177,6 +179,13 @@ export const sidebarMenuConfig: MenuItem[] = [
         label: '聊天会话日志',
         icon: MessageSquare,
         href: '/admin/chat-conversation',
+      },
+      {
+        id: 'router-log',
+        type: 'link',
+        label: '路由记录',
+        icon: Route,
+        href: '/admin/router',
       },
     ],
   },
