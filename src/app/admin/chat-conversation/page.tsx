@@ -111,7 +111,6 @@ export default function ChatConversationPage() {
     <>
       <PageHeader
         title="聊天会话日志"
-        description="查看和管理所有聊天会话记录"
         icon={MessageSquare}
       />
 
