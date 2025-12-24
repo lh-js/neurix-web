@@ -163,13 +163,10 @@ export default function ChatPage() {
             <div className="break-words text-sm sm:text-base relative z-10">
               {isUser ? (
                 // 用户消息保持纯文本，不渲染 Markdown
-                <div className="whitespace-pre-wrap">{content}</div>
+                <div className="whitespace-pre-wrap">{content.trimEnd()}</div>
               ) : (
                 // AI 消息支持 Markdown
-                <MarkdownContent content={content} />
-              )}
-              {isStreamingMessage && (
-                <span className="inline-block w-0.5 h-5 bg-current animate-pulse ml-0.5" />
+                <MarkdownContent content={content.trimEnd()} />
               )}
             </div>
           </div>

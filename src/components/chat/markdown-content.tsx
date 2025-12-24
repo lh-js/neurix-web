@@ -24,7 +24,7 @@ export function MarkdownContent({ content, className = '' }: MarkdownContentProp
   }
 
   return (
-    <div className={`markdown-content ${className}`}>
+    <div className={`markdown-content ${className} [&>*:last-child]:mb-0`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
