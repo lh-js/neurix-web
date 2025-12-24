@@ -363,7 +363,7 @@ export default function ChatPage() {
                       onKeyPress={handleKeyPress}
                       placeholder="输入您的问题..."
                       disabled={isLoading}
-                      className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-sm sm:text-base transition-all duration-300 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 group-hover:border-primary/30"
+                      className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-base transition-all duration-300 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 group-hover:border-primary/30"
                     />
                     {/* 输入框聚焦时的光晕效果 */}
                     <div className="absolute inset-0 rounded-md bg-primary/0 group-focus-within:bg-primary/5 blur-xl transition-all duration-300 pointer-events-none -z-10" />

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
@@ -6,6 +6,13 @@ import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provi
 export const metadata: Metadata = {
   title: 'Neurix',
   description: 'Neurix',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
