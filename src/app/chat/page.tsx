@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Send, Square, User, Bot, Zap, ZapOff, Menu, Plus } from 'lucide-react'
+import { Send, Square, User, Bot, Zap, ZapOff, Menu } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { useChat } from '@/hooks/chat/use-chat'
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions'
@@ -365,7 +365,7 @@ export default function ChatPage() {
         <div
           className={`${
             mobileSessionListOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 md:z-auto w-64 border-r border-border/40 flex-shrink-0 bg-background transition-transform duration-300`}
+          } md:translate-x-0 fixed md:static top-16 md:top-auto bottom-0 md:inset-y-0 left-0 z-50 md:z-auto w-64 border-r border-border/40 flex-shrink-0 bg-background transition-transform duration-300`}
         >
           <SessionList
             sessions={sessions}
@@ -390,7 +390,7 @@ export default function ChatPage() {
 
         {/* 聊天内容区域 */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* 移动端顶部栏 - 固定不滚动，含新建对话 */}
+          {/* 移动端顶部栏 - 固定不滚动 */}
           <div className="md:hidden p-2 border-b border-border/40 flex items-center gap-2 flex-shrink-0 bg-background z-10">
             <Button
               variant="ghost"
@@ -403,20 +403,6 @@ export default function ChatPage() {
             <div className="flex-1 text-sm font-medium truncate min-w-0">
               {currentSession?.title || '新对话'}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                createSession().catch(() => {
-                  // 创建失败时静默处理
-                })
-              }}
-              disabled={creatingSession}
-              className="h-8 w-8"
-              title="新建对话"
-            >
-              {creatingSession ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            </Button>
           </div>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 relative min-h-0">
