@@ -59,3 +59,20 @@ export async function updateConversation(
 export async function deleteConversation(id: number): Promise<void> {
   await del(`/chat-conversation/${id}`)
 }
+
+/**
+ * 获取管理端会话列表
+ */
+export async function getAdminConversationList(
+  params?: ConversationListParams
+): Promise<ConversationListResponse> {
+  const queryParams: Record<string, string> = {}
+  if (params?.page) {
+    queryParams.page = params.page.toString()
+  }
+  if (params?.pageSize) {
+    queryParams.pageSize = params.pageSize.toString()
+  }
+  const response = await get<ConversationListResponse>('/chat-conversation/admin', queryParams)
+  return response
+}

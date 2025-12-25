@@ -38,3 +38,13 @@ export async function getMessages(params: GetMessagesParams): Promise<ChatMessag
 export async function deleteMessage(messageId: number): Promise<void> {
   await del(`/chat-message/${messageId}`)
 }
+
+/**
+ * 获取管理端会话的所有消息
+ */
+export async function getAdminMessages(params: GetMessagesParams): Promise<ChatMessage[]> {
+  const response = await get<ChatMessage[]>('/chat-message/admin', {
+    conversationId: params.conversationId.toString(),
+  })
+  return response
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getConversationList } from '@/service/api/chat-conversation'
-import { getMessages } from '@/service/api/chat-message'
+import { getAdminConversationList } from '@/service/api/chat-conversation'
+import { getAdminMessages } from '@/service/api/chat-message'
 import type {
   ConversationListParams,
   ConversationListResponse,
@@ -39,7 +39,7 @@ export function useChatConversationList(): UseChatConversationListReturn {
       setLoading(true)
       setError(null)
       try {
-        const response = await getConversationList(params)
+        const response = await getAdminConversationList(params)
         setData(response)
       } catch (err) {
         setError(err instanceof Error ? err : new Error('获取聊天会话列表失败'))
@@ -84,7 +84,7 @@ export function useConversationMessages(conversationId: number | null) {
     setLoading(true)
     setError(null)
     try {
-      const response = await getMessages({ conversationId })
+      const response = await getAdminMessages({ conversationId })
       // 确保返回的是数组
       setMessages(Array.isArray(response) ? response : [])
     } catch (err) {
