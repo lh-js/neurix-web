@@ -333,9 +333,13 @@ export default function ChatPage() {
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
             <span>
-              {new Date(message.createTime).toLocaleTimeString('zh-CN', {
+              {new Date(message.createTime).toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
               })}
             </span>
             {message.id > 0 && !isStreamingMessage && (
