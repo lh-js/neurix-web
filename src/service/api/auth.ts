@@ -6,6 +6,8 @@ import {
   LoginResponse,
   LoginWithTokenRequest,
   LoginWithTokenResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
   UserInfo,
   AccessibleResourcesResponse,
   SendEmailCodeRequest,
@@ -37,12 +39,22 @@ export async function loginWithToken(data: LoginWithTokenRequest): Promise<Login
 }
 
 /**
+ * 刷新Token API
+ */
+export async function refreshToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
+  const response = await post<RefreshTokenResponse>('/auth/refresh', data)
+  return response
+}
+
+/**
  * 登出（清除本地 token）
  */
 export function logout(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     sessionStorage.removeItem('token')
+    sessionStorage.removeItem('refreshToken')
   }
 }
 

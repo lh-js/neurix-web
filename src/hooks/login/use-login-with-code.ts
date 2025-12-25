@@ -5,7 +5,7 @@ import {
   VerifyEmailCodeRequest,
   LoginWithTokenRequest,
 } from '@/service/types/auth'
-import { setToken } from '@/utils/auth.util'
+import { setTokens } from '@/utils/auth.util'
 
 /**
  * 获取URL中的查询参数
@@ -109,8 +109,8 @@ export function useLoginWithCode() {
 
         const response = await loginWithToken(loginRequest)
 
-        // 保存 token
-        setToken(response.accessToken, formData.rememberMe)
+        // 保存 tokens（accessToken 和 refreshToken）
+        setTokens(response.accessToken, response.refreshToken, formData.rememberMe)
 
         // 验证 token 是否已保存
         if (typeof window !== 'undefined') {

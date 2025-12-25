@@ -6,7 +6,7 @@ import axios, {
 } from 'axios'
 import { toast } from 'sonner'
 import { ApiResponse, ErrorResponseData } from './types'
-import { clearAuth, getToken } from '@/utils/auth.util'
+import { clearAuth, getToken, getRefreshToken, setTokens } from '@/utils/auth.util'
 import { isClient, isDevelopment, isServer } from '@/utils/env.util'
 
 // 创建 axios 实例
@@ -31,6 +31,26 @@ const showErrorToast = (message: string) => {
 const getErrorMessage = (data: unknown, defaultMessage: string): string => {
   const errorData = data as ErrorResponseData
   return errorData?.message || defaultMessage
+}
+
+// 刷新 token 的锁，防止多个请求同时触发刷新
+let isRefreshing = false
+// 存储等待刷新完成的请求队列
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void
+  reject: (reason?: unknown) => void
+}> = []
+
+// 处理等待队列中的请求
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
 }
 
 // 请求拦截器
@@ -95,13 +115,111 @@ request.interceptors.response.use(
       const defaultMessage = errorMessages[status] || `连接错误: ${status}`
       const errorMessage = getErrorMessage(data, defaultMessage)
 
-      // 401 特殊处理：触发登录过期弹窗
+      // 401 特殊处理：尝试刷新 token
       if (status === 401) {
-        clearAuth()
-        // 不显示 toast，由弹窗处理
-        if (isClient) {
-          // 触发自定义事件，通知401错误处理组件显示弹窗
-          window.dispatchEvent(new CustomEvent('auth:expired'))
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+        // 如果是刷新 token 的请求失败，直接清除认证信息并显示弹窗
+        if (originalRequest?.url?.includes('/auth/refresh')) {
+          clearAuth()
+          if (isClient) {
+            window.dispatchEvent(new CustomEvent('auth:expired'))
+          }
+          return Promise.reject(new Error(errorMessage))
+        }
+
+        // 如果已经在刷新中，将请求加入队列等待
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject })
+          })
+            .then(token => {
+              // 刷新成功后，使用新 token 重试原请求
+              if (originalRequest && originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`
+              }
+              return request(originalRequest)
+            })
+            .catch(err => {
+              return Promise.reject(err)
+            })
+        }
+
+        // 尝试刷新 token
+        const refreshTokenValue = isClient ? getRefreshToken() : null
+        if (refreshTokenValue && originalRequest && !originalRequest._retry) {
+          originalRequest._retry = true
+          isRefreshing = true
+
+          // 使用原始 axios 实例调用刷新接口，避免经过拦截器
+          return axios
+            .post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api'}/auth/refresh`,
+              { refreshToken: refreshTokenValue },
+              {
+                headers: {
+                  'Content-Type': 'application/json;charset=UTF-8',
+                },
+              }
+            )
+            .then(axiosResponse => {
+              // 处理响应数据结构
+              const responseData = axiosResponse.data as unknown
+              let refreshResponse: { accessToken: string; refreshToken: string }
+
+              // 根据后端返回的数据结构处理
+              if (
+                typeof responseData === 'object' &&
+                responseData !== null &&
+                'status' in responseData &&
+                (responseData as { status?: number }).status !== undefined &&
+                (responseData as { status: number }).status >= 200 &&
+                (responseData as { status: number }).status < 300
+              ) {
+                refreshResponse = (
+                  responseData as unknown as { data: { accessToken: string; refreshToken: string } }
+                ).data
+              } else {
+                refreshResponse = responseData as unknown as {
+                  accessToken: string
+                  refreshToken: string
+                }
+              }
+
+              // 保存新的 tokens
+              if (isClient) {
+                // 判断使用 localStorage 还是 sessionStorage
+                const rememberMe =
+                  !!localStorage.getItem('token') || !!localStorage.getItem('refreshToken')
+                setTokens(refreshResponse.accessToken, refreshResponse.refreshToken, rememberMe)
+              }
+
+              // 处理等待队列
+              processQueue(null, refreshResponse.accessToken)
+
+              // 使用新 token 重试原请求
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${refreshResponse.accessToken}`
+              }
+              isRefreshing = false
+              return request(originalRequest)
+            })
+            .catch(refreshError => {
+              // 刷新失败，清除认证信息并显示弹窗
+              processQueue(refreshError as Error, null)
+              clearAuth()
+              if (isClient) {
+                window.dispatchEvent(new CustomEvent('auth:expired'))
+              }
+              isRefreshing = false
+              return Promise.reject(refreshError)
+            })
+        } else {
+          // 没有 refreshToken 或已经重试过，直接清除认证信息并显示弹窗
+          clearAuth()
+          if (isClient) {
+            window.dispatchEvent(new CustomEvent('auth:expired'))
+          }
         }
       } else {
         showErrorToast(errorMessage)

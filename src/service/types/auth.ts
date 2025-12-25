@@ -11,6 +11,7 @@ export interface LoginRequest {
  */
 export interface LoginResponse {
   accessToken: string
+  refreshToken: string
 }
 
 /**
@@ -26,6 +27,22 @@ export interface LoginWithTokenRequest {
  */
 export interface LoginWithTokenResponse {
   accessToken: string
+  refreshToken: string
+}
+
+/**
+ * 刷新Token请求参数
+ */
+export interface RefreshTokenRequest {
+  refreshToken: string
+}
+
+/**
+ * 刷新Token响应数据
+ */
+export interface RefreshTokenResponse {
+  accessToken: string
+  refreshToken: string
 }
 
 /**

@@ -12,6 +12,16 @@ export function getToken(): string | null {
 }
 
 /**
+ * 获取 refresh token
+ */
+export function getRefreshToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+  }
+  return null
+}
+
+/**
  * 保存 token
  */
 export function setToken(token: string, rememberMe = false): void {
@@ -29,6 +39,27 @@ export function setToken(token: string, rememberMe = false): void {
 }
 
 /**
+ * 保存 tokens（accessToken 和 refreshToken）
+ */
+export function setTokens(accessToken: string, refreshToken: string, rememberMe = false): void {
+  if (typeof window !== 'undefined') {
+    // 先清除旧的 tokens
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('refreshToken')
+    // 保存新的 tokens
+    if (rememberMe) {
+      localStorage.setItem('token', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+    } else {
+      sessionStorage.setItem('token', accessToken)
+      sessionStorage.setItem('refreshToken', refreshToken)
+    }
+  }
+}
+
+/**
  * 检查是否已登录
  */
 export function isAuthenticated(): boolean {
@@ -39,7 +70,9 @@ export function isAuthenticated(): boolean {
 export const clearAuth = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     sessionStorage.removeItem('token')
+    sessionStorage.removeItem('refreshToken')
   }
 }
 
