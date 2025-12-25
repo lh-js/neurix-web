@@ -7,7 +7,7 @@ interface UseChatProps {
   messages: ChatMessage[]
   conversationId?: number // 会话ID，用于自动保存
   onMessagesChange: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void
-  onMessageSaved?: () => void // 消息保存完成后的回调（用于刷新消息列表）
+  onMessageSaved?: (conversationId?: number) => void // 消息保存完成后的回调（用于刷新消息列表）
 }
 
 export function useChat({
@@ -136,7 +136,7 @@ export function useChat({
                 // 延迟刷新消息列表，确保后端已保存
                 if (onMessageSaved) {
                   setTimeout(() => {
-                    onMessageSaved()
+                    onMessageSaved(conversationId)
                   }, 500)
                 }
               }
@@ -151,7 +151,7 @@ export function useChat({
           // 延迟刷新消息列表，确保后端已保存
           if (onMessageSaved) {
             setTimeout(() => {
-              onMessageSaved()
+              onMessageSaved(conversationId)
             }, 500)
           }
         }

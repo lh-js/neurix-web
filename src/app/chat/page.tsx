@@ -4,12 +4,15 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Send, Square, User, Bot, Zap, ZapOff, Menu } from 'lucide-react'
+import { Send, Square, User, Bot, Zap, ZapOff, Menu, Trash2 } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { useChat } from '@/hooks/chat/use-chat'
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions'
 import { SessionList } from '@/components/chat/session-list'
 import { MarkdownContent } from '@/components/chat/markdown-content'
+import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
+import { deleteMessage } from '@/service/api/chat-message'
+import { toast } from 'sonner'
 import { ChatMessage } from '@/service/types/chat-message'
 
 export default function ChatPage() {
@@ -27,6 +30,7 @@ export default function ChatPage() {
     switchSession,
     updateSessionMessages,
     updateSessionTitle,
+    refreshSessionMessages,
   } = useChatSessions()
 
   const messages = useMemo(() => currentSession?.messages || [], [currentSession?.messages])
@@ -38,6 +42,9 @@ export default function ChatPage() {
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const isKeyboardOpenRef = useRef(false)
   const focusTimeoutsRef = useRef<NodeJS.Timeout[]>([])
+  const [deletingMessageIds, setDeletingMessageIds] = useState<Set<number>>(new Set())
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [messageToDelete, setMessageToDelete] = useState<ChatMessage | null>(null)
 
   // 当会话切换时，确保有当前会话
   useEffect(() => {
@@ -72,9 +79,12 @@ export default function ChatPage() {
         updateSessionMessages(currentSessionId, newMessages)
       }
     },
-    onMessageSaved: () => {
-      // AI 响应完成后，updateSessionMessages 已经会刷新消息列表
-      // 这里不需要额外操作，避免重复调用
+    onMessageSaved: (savedConversationId?: number) => {
+      const targetId = savedConversationId || currentSessionId
+      if (targetId) {
+        // 静默刷新最新聊天记录，避免打扰用户
+        refreshSessionMessages(targetId, { silent: true })
+      }
     },
   })
 
@@ -282,13 +292,12 @@ export default function ChatPage() {
   const renderMessage = (message: ChatMessage, isStreamingMessage = false) => {
     const isUser = message.role === 'user'
     const content = isStreamingMessage ? currentStreamingMessage : message.content
+    const isDeleting = message.id > 0 && deletingMessageIds.has(message.id)
 
     return (
-      <div
-        className={`flex gap-3 mb-4 animate-message-in ${isUser ? 'justify-end' : 'justify-start'}`}
-      >
+      <div className={`flex gap-3 mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
         {!isUser && (
-          <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
+          <Avatar className="w-8 h-8 flex-shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary relative overflow-visible">
               <Bot className="w-4 h-4" />
               {isStreamingMessage && (
@@ -322,16 +331,32 @@ export default function ChatPage() {
               )}
             </div>
           </div>
-          <div className="text-xs text-muted-foreground px-2 animate-fade-in">
-            {new Date(message.createTime).toLocaleTimeString('zh-CN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
+            <span>
+              {new Date(message.createTime).toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+            {message.id > 0 && !isStreamingMessage && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-destructive hover:text-destructive/80 disabled:opacity-50"
+                onClick={() => {
+                  setMessageToDelete(message)
+                  setDeleteConfirmOpen(true)
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Spinner className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
+                <span className="hidden sm:inline">删除</span>
+              </button>
+            )}
           </div>
         </div>
 
         {isUser && (
-          <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
+          <Avatar className="w-8 h-8 flex-shrink-0">
             <AvatarFallback className="bg-secondary text-secondary-foreground">
               <User className="w-4 h-4" />
             </AvatarFallback>
@@ -339,6 +364,35 @@ export default function ChatPage() {
         )}
       </div>
     )
+  }
+
+  const handleDeleteMessage = async (message: ChatMessage) => {
+    if (!currentSessionId || !message.id || message.id <= 0) return
+    if (deletingMessageIds.has(message.id)) return
+
+    setDeletingMessageIds(prev => new Set(prev).add(message.id))
+
+    // 本地先移除，减少跳动
+    updateSessionMessages(
+      currentSessionId,
+      messagesRef.current.filter(m => m.id !== message.id)
+    )
+
+    try {
+      await deleteMessage(message.id)
+      // 静默刷新，确保与后端一致
+      refreshSessionMessages(currentSessionId, { silent: true })
+    } catch (error) {
+      toast.error('删除消息失败')
+      // 失败时重新拉取，恢复状态
+      refreshSessionMessages(currentSessionId, { silent: true })
+    } finally {
+      setDeletingMessageIds(prev => {
+        const next = new Set(prev)
+        next.delete(message.id)
+        return next
+      })
+    }
   }
 
   return (
@@ -463,8 +517,8 @@ export default function ChatPage() {
 
                   {/* 加载状态 - 只在非流式模式或流式开始前显示 */}
                   {isLoading && !isStreaming && (
-                    <div className="flex gap-3 mb-4 justify-start animate-message-in">
-                      <Avatar className="w-8 h-8 flex-shrink-0 animate-avatar-bounce">
+                    <div className="flex gap-3 mb-4 justify-start">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarFallback className="bg-primary/10 text-primary relative">
                           <Bot className="w-4 h-4" />
                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
@@ -582,6 +636,29 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={open => {
+          setDeleteConfirmOpen(open)
+          if (!open) {
+            setMessageToDelete(null)
+          }
+        }}
+        title="确认删除消息"
+        description="删除后无法恢复，确定要删除这条消息吗？"
+        deleting={messageToDelete ? deletingMessageIds.has(messageToDelete.id) : false}
+        onConfirm={async () => {
+          if (messageToDelete) {
+            await handleDeleteMessage(messageToDelete)
+          }
+          setDeleteConfirmOpen(false)
+        }}
+        onCancel={() => {
+          setDeleteConfirmOpen(false)
+          setMessageToDelete(null)
+        }}
+      />
     </div>
   )
 }

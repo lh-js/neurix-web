@@ -51,48 +51,51 @@ export function useChatSessions() {
   }, [])
 
   // 加载会话的消息（使用 ref 防止重复调用）
-  const loadSessionMessages = useCallback(async (sessionId: number) => {
-    // 如果正在加载，跳过
-    if (loadingMessagesRef.current.has(sessionId)) {
-      return
-    }
-    loadingMessagesRef.current.add(sessionId)
-    setLoadingMessages(prev => new Set(prev).add(sessionId))
-    try {
-      const messages = await getMessages({ conversationId: sessionId })
-      setSessions(prevSessions =>
-        prevSessions.map(session => {
-          if (session.id === sessionId) {
-            // 合并本地临时消息（id为0）和从后端加载的消息
-            // 保留本地临时消息，避免覆盖正在发送的消息
-            const localTemporaryMessages = session.messages.filter(msg => msg.id === 0)
-            // 合并消息：先添加后端消息，然后添加本地临时消息
-            // 这样可以确保临时消息显示在最后
-            const mergedMessages = [...messages, ...localTemporaryMessages]
-            return {
-              ...session,
-              messages: mergedMessages,
+  const loadSessionMessages = useCallback(
+    async (sessionId: number, options: { silent?: boolean } = {}) => {
+      const { silent = false } = options
+      // 如果正在加载，跳过
+      if (loadingMessagesRef.current.has(sessionId)) {
+        return
+      }
+      loadingMessagesRef.current.add(sessionId)
+      if (!silent) {
+        setLoadingMessages(prev => new Set(prev).add(sessionId))
+      }
+      try {
+        const messages = await getMessages({ conversationId: sessionId })
+        setSessions(prevSessions =>
+          prevSessions.map(session => {
+            if (session.id === sessionId) {
+              // 直接使用后端返回的消息列表（不再拼接本地临时消息）
+              return {
+                ...session,
+                messages,
+              }
             }
-          }
-          return session
-        })
-      )
-      // 标记为已加载
-      loadedMessagesRef.current.add(sessionId)
-    } catch (error) {
-      console.error('加载消息失败:', error)
-      toast.error('加载消息失败')
-      // 加载失败时，移除标记以便重试
-      loadedMessagesRef.current.delete(sessionId)
-    } finally {
-      loadingMessagesRef.current.delete(sessionId)
-      setLoadingMessages(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(sessionId)
-        return newSet
-      })
-    }
-  }, [])
+            return session
+          })
+        )
+        // 标记为已加载
+        loadedMessagesRef.current.add(sessionId)
+      } catch (error) {
+        console.error('加载消息失败:', error)
+        toast.error('加载消息失败')
+        // 加载失败时，移除标记以便重试
+        loadedMessagesRef.current.delete(sessionId)
+      } finally {
+        loadingMessagesRef.current.delete(sessionId)
+        if (!silent) {
+          setLoadingMessages(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(sessionId)
+            return newSet
+          })
+        }
+      }
+    },
+    []
+  )
 
   // 初始化加载
   useEffect(() => {
@@ -209,6 +212,14 @@ export function useChatSessions() {
     loadSessions()
   }, [loadSessions])
 
+  // 重新加载指定会话的消息（可静默）
+  const refreshSessionMessages = useCallback(
+    (sessionId: number, options: { silent?: boolean } = {}) => {
+      return loadSessionMessages(sessionId, options)
+    },
+    [loadSessionMessages]
+  )
+
   // 获取当前会话
   const currentSession = sessions.find(s => s.id === currentSessionId) || null
 
@@ -232,5 +243,6 @@ export function useChatSessions() {
     updateSessionMessages,
     updateSessionTitle,
     refreshSessions,
+    refreshSessionMessages,
   }
 }

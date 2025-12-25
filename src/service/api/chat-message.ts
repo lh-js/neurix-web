@@ -1,4 +1,4 @@
-import { get, post } from '../request'
+import { del, get, post } from '../request'
 import {
   CreateMessageRequest,
   BatchCreateMessageRequest,
@@ -30,4 +30,11 @@ export async function getMessages(params: GetMessagesParams): Promise<ChatMessag
     conversationId: params.conversationId.toString(),
   })
   return response
+}
+
+/**
+ * 删除单条消息
+ */
+export async function deleteMessage(messageId: number): Promise<void> {
+  await del(`/chat-message/${messageId}`)
 }
