@@ -199,14 +199,16 @@ export function SessionList({
                   </div>
                   {/* 操作按钮：桌面悬停显示，移动端左划显示 */}
                   <div
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 bg-background/80 backdrop-blur-sm rounded px-1 py-0.5 transition-opacity ${
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 rounded px-1 py-0.5 transition-opacity ${
                       isSwiped ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    }`}
+                    } ${isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent'}`}
                   >
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className={`h-6 w-6 ${
+                        isActive ? 'hover:bg-accent/60' : 'hover:bg-accent/40'
+                      }`}
                       onClick={e => handleEditClick(session, e)}
                       disabled={deletingSessionId !== null}
                     >
@@ -215,7 +217,9 @@ export function SessionList({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-destructive hover:text-destructive"
+                      className={`h-6 w-6 text-destructive hover:text-destructive ${
+                        isActive ? 'hover:bg-accent/60' : 'hover:bg-accent/40'
+                      }`}
                       onClick={e => handleDeleteClick(session.id, e)}
                       disabled={deletingSessionId !== null || isLoadingMessages}
                     >
