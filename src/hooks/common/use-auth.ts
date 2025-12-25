@@ -5,7 +5,6 @@ import { userStore } from '@/stores/user-store'
 import { getUserInfo, logout, getAccessibleResources } from '@/service/api/auth'
 import { isAuthenticated } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
-import { showLoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 
 /**
  * 使用用户 store 的 Hook
@@ -135,7 +134,8 @@ export function useAuth() {
       userStore.pagesInitialized = false
     })
     if (typeof window !== 'undefined') {
-      showLoginConfirmDialog('已退出登录', '您已成功退出登录，请重新登录以继续使用。')
+      // 直接跳转到登录页，不显示弹窗
+      window.location.href = LOGIN_PATH
     }
   }
 
