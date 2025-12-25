@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getConversationList } from '@/service/api/chat-conversation'
 import { getMessages } from '@/service/api/chat-message'
 import type {
@@ -12,7 +12,7 @@ interface UseChatConversationListReturn {
   loading: boolean
   error: Error | null
   handlePageChange: (page: number) => void
-  fetchList: () => Promise<void>
+  fetchList: (options?: { force?: boolean }) => Promise<void>
 }
 
 export function useChatConversationList(): UseChatConversationListReturn {
@@ -23,8 +23,19 @@ export function useChatConversationList(): UseChatConversationListReturn {
     page: 1,
     pageSize: 10,
   })
+  const lastFetchedKeyRef = useRef<string | null>(null)
 
-  const fetchList = useCallback(async () => {
+  const fetchList = useCallback(
+    async (options: { force?: boolean } = {}) => {
+      const { force = false } = options
+      const key = `${params.page}-${params.pageSize}`
+
+      // 避免相同参数在 StrictMode 下重复请求
+      if (!force && lastFetchedKeyRef.current === key) {
+        return
+      }
+      lastFetchedKeyRef.current = key
+
     setLoading(true)
     setError(null)
     try {
@@ -35,7 +46,9 @@ export function useChatConversationList(): UseChatConversationListReturn {
     } finally {
       setLoading(false)
     }
-  }, [params])
+    },
+    [params]
+  )
 
   useEffect(() => {
     fetchList()
