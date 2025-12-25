@@ -137,6 +137,9 @@ export default function RoleApiPage() {
     toggleMethod,
     toggleAllMethods,
     HTTP_METHODS,
+    availableRoutes,
+    routesLoading,
+    handleRouteSelect,
   } = useRoleApiForm({
     fetchRoleApiById,
     handleCreate,
@@ -221,6 +224,9 @@ export default function RoleApiPage() {
         onToggleMethod={toggleMethod}
         onToggleAllMethods={toggleAllMethods}
         httpMethods={HTTP_METHODS}
+        availableRoutes={availableRoutes}
+        routesLoading={routesLoading}
+        onRouteSelect={handleRouteSelect}
       />
 
       <DeleteConfirmDialog

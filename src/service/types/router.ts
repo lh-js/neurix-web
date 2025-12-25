@@ -27,3 +27,12 @@ export interface RouterRecordListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
+
+/**
+ * 整合后的路由信息（相同 URL 的不同 methods 整合在一起）
+ */
+export interface GroupedRouterRecord {
+  path: string
+  methods: string[]
+  ids: number[] // 原始记录的 ID 数组
+}

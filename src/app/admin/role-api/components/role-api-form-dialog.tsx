@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { CreateRoleApiRequest } from '@/service/types/role-api'
+import type { GroupedRouterRecord } from '@/service/types/router'
 
 interface RoleApiFormDialogProps {
   open: boolean
@@ -35,6 +36,9 @@ interface RoleApiFormDialogProps {
   onToggleMethod: (method: string) => void
   onToggleAllMethods: () => void
   httpMethods: string[]
+  availableRoutes?: GroupedRouterRecord[]
+  routesLoading?: boolean
+  onRouteSelect?: (route: GroupedRouterRecord) => void
 }
 
 export function RoleApiFormDialog({
@@ -49,6 +53,9 @@ export function RoleApiFormDialog({
   onToggleMethod,
   onToggleAllMethods,
   httpMethods,
+  availableRoutes = [],
+  routesLoading = false,
+  onRouteSelect,
 }: RoleApiFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,13 +77,98 @@ export function RoleApiFormDialog({
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="url">URL</Label>
-              <Input
-                id="url"
-                value={formData.url}
-                onChange={e => onFormDataChange({ ...formData, url: e.target.value })}
-                placeholder="请输入URL"
-                disabled={loading}
-              />
+              {!editing && availableRoutes.length > 0 ? (
+                <>
+                  <Select
+                    value={formData.url || ''}
+                    onValueChange={value => {
+                      if (onRouteSelect && value) {
+                        const route = availableRoutes.find(r => r.path === value)
+                        if (route) {
+                          onRouteSelect(route)
+                        }
+                      }
+                    }}
+                    disabled={loading || routesLoading}
+                  >
+                    <SelectTrigger id="url">
+                      <SelectValue placeholder={routesLoading ? '加载中...' : '请选择接口'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoutes.map(route => (
+                        <SelectItem key={route.path} value={route.path}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{route.path}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({route.methods.length} 个方法)
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.url && (
+                    <div className="mt-2 p-2 bg-muted rounded-md">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        该接口支持的方法：
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {availableRoutes
+                          .find(r => r.path === formData.url)
+                          ?.methods.map(method => (
+                            <span
+                              key={method}
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                            >
+                              {method}
+                            </span>
+                          ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        已自动选中所有可用方法，您可以在下方取消不需要的方法
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Input
+                    id="url"
+                    value={formData.url}
+                    onChange={e => onFormDataChange({ ...formData, url: e.target.value })}
+                    placeholder={editing ? '请输入URL' : '请先选择接口或手动输入URL'}
+                    disabled={loading}
+                  />
+                  {editing && formData.url && availableRoutes.length > 0 && (
+                    <div className="mt-2 p-2 bg-muted rounded-md">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        该接口支持的方法：
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {availableRoutes
+                          .find(r => r.path === formData.url)
+                          ?.methods.map(method => (
+                            <span
+                              key={method}
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                            >
+                              {method}
+                            </span>
+                          )) || (
+                          <span className="text-xs text-muted-foreground">
+                            未找到该接口的路由信息
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              {!editing && availableRoutes.length === 0 && !routesLoading && (
+                <p className="text-sm text-muted-foreground">
+                  暂无可用接口，请手动输入URL
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">描述</Label>
@@ -104,22 +196,45 @@ export function RoleApiFormDialog({
                 </Button>
               </div>
               <div className="border rounded-md p-4 space-y-2">
-                {httpMethods.map(method => (
-                  <div key={method} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`method-${method}`}
-                      checked={formData.methods.includes(method)}
-                      onCheckedChange={() => onToggleMethod(method)}
-                      disabled={loading}
-                    />
-                    <Label
-                      htmlFor={`method-${method}`}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {method}
-                    </Label>
-                  </div>
-                ))}
+                {(() => {
+                  const selectedRoute = !editing && formData.url
+                    ? availableRoutes.find(r => r.path === formData.url)
+                    : null
+                  const supportedMethods = selectedRoute?.methods || []
+                  
+                  return httpMethods.map(method => {
+                    const isSupported = supportedMethods.includes(method)
+                    const isSelected = formData.methods.includes(method)
+                    
+                    return (
+                      <div key={method} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`method-${method}`}
+                          checked={isSelected}
+                          onCheckedChange={() => onToggleMethod(method)}
+                          disabled={loading}
+                        />
+                        <Label
+                          htmlFor={`method-${method}`}
+                          className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                        >
+                          <span>{method}</span>
+                          {!editing && selectedRoute && (
+                            <span
+                              className={`text-xs ${
+                                isSupported
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : 'text-muted-foreground'
+                              }`}
+                            >
+                              {isSupported ? '(该接口支持)' : '(该接口不支持)'}
+                            </span>
+                          )}
+                        </Label>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             </div>
             <div className="space-y-2">

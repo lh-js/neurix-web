@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import type { RoleApi, CreateRoleApiRequest } from '@/service/types/role-api'
+import { getAllRouterRecords } from '@/service/api/router'
+import { getAllRoleApis } from '@/service/api/role-api'
+import type { RouterRecord, GroupedRouterRecord } from '@/service/types/router'
 
 interface UseRoleApiFormProps {
   fetchRoleApiById: (id: number) => Promise<RoleApi>
@@ -25,8 +28,73 @@ export function useRoleApiForm({
   })
   const [dialogLoading, setDialogLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [availableRoutes, setAvailableRoutes] = useState<GroupedRouterRecord[]>([])
+  const [routesLoading, setRoutesLoading] = useState(false)
+  const [existingRoleApis, setExistingRoleApis] = useState<RoleApi[]>([])
 
-  const openCreateDialog = () => {
+  // 获取可用的路由列表（过滤掉已存在的接口，并整合相同 URL 的不同 methods）
+  const fetchAvailableRoutes = async (excludeApiId?: number) => {
+    try {
+      setRoutesLoading(true)
+      const [routes, existingApis] = await Promise.all([
+        getAllRouterRecords(),
+        getAllRoleApis(),
+      ])
+      
+      setExistingRoleApis(existingApis)
+      
+      // 过滤掉已存在的接口（根据 path 和 method 组合判断）
+      // 如果传入了 excludeApiId，则不过滤该接口（用于编辑时显示当前接口支持的方法）
+      const existingKeys = new Set(
+        existingApis
+          .filter(api => !excludeApiId || api.id !== excludeApiId) // 编辑时不过滤当前编辑的接口
+          .flatMap(api => 
+            api.methods.map(method => `${api.url}::${method}`)
+          )
+      )
+      
+      const filtered = routes.filter(route => {
+        const key = `${route.path}::${route.method}`
+        return !existingKeys.has(key)
+      })
+      
+      // 整合相同 URL 的不同 methods
+      const groupedMap = new Map<string, GroupedRouterRecord>()
+      
+      filtered.forEach(route => {
+        const existing = groupedMap.get(route.path)
+        if (existing) {
+          // 如果该 URL 已存在，添加 method 和 id
+          if (!existing.methods.includes(route.method)) {
+            existing.methods.push(route.method)
+            existing.ids.push(route.id)
+          }
+        } else {
+          // 如果该 URL 不存在，创建新记录
+          groupedMap.set(route.path, {
+            path: route.path,
+            methods: [route.method],
+            ids: [route.id],
+          })
+        }
+      })
+      
+      // 转换为数组并排序
+      const grouped = Array.from(groupedMap.values()).sort((a, b) => 
+        a.path.localeCompare(b.path)
+      )
+      
+      setAvailableRoutes(grouped)
+    } catch (err) {
+      console.error('获取路由列表失败:', err)
+      toast.error('获取路由列表失败')
+      setAvailableRoutes([])
+    } finally {
+      setRoutesLoading(false)
+    }
+  }
+
+  const openCreateDialog = async () => {
     setEditingItem(null)
     setFormData({
       url: '',
@@ -35,6 +103,8 @@ export function useRoleApiForm({
       isPublic: false,
     })
     setIsDialogOpen(true)
+    // 打开对话框时获取可用路由
+    await fetchAvailableRoutes()
   }
 
   const openEditDialog = async (item: RoleApi) => {
@@ -43,8 +113,12 @@ export function useRoleApiForm({
     setIsDialogOpen(true)
 
     try {
-      // 通过接口获取最新的数据
-      const roleApi = await fetchRoleApiById(item.id)
+      // 同时获取详情和路由列表（传入当前编辑的 ID，不过滤该接口）
+      const [roleApi] = await Promise.all([
+        fetchRoleApiById(item.id),
+        fetchAvailableRoutes(item.id), // 编辑时传入当前 ID，不过滤该接口
+      ])
+      
       setFormData({
         url: roleApi.url,
         description: roleApi.description,
@@ -60,6 +134,12 @@ export function useRoleApiForm({
         methods: item.methods || [],
         isPublic: item.isPublic,
       })
+      // 即使获取详情失败，也尝试获取路由列表
+      try {
+        await fetchAvailableRoutes(item.id)
+      } catch {
+        // 忽略路由列表获取失败
+      }
       toast.error('获取详情失败，使用列表数据')
     } finally {
       setDialogLoading(false)
@@ -111,6 +191,26 @@ export function useRoleApiForm({
     })
   }
 
+  // 选择路由时，自动填充 URL 和所有可用的 methods
+  const handleRouteSelect = (groupedRoute: GroupedRouterRecord) => {
+    setFormData(prev => {
+      // 如果 URL 改变了，自动填充所有可用的 methods
+      // 如果 URL 没变，保持当前的 methods 选择
+      if (prev.url !== groupedRoute.path) {
+        return {
+          ...prev,
+          url: groupedRoute.path,
+          methods: [...groupedRoute.methods], // 自动选中该 URL 的所有可用 methods
+        }
+      }
+      // URL 相同，只更新 URL（虽然不会改变），保持 methods 不变
+      return {
+        ...prev,
+        url: groupedRoute.path,
+      }
+    })
+  }
+
   return {
     isDialogOpen,
     setIsDialogOpen,
@@ -125,5 +225,8 @@ export function useRoleApiForm({
     toggleMethod,
     toggleAllMethods,
     HTTP_METHODS,
+    availableRoutes,
+    routesLoading,
+    handleRouteSelect,
   }
 }
