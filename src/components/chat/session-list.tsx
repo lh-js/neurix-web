@@ -49,6 +49,8 @@ export function SessionList({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null)
   const previousUpdatingTitleSessionIdRef = useRef<number | null>(null)
+  const [swipedSessionId, setSwipedSessionId] = useState<number | null>(null)
+  const touchStartXRef = useRef<number | null>(null)
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
@@ -103,6 +105,28 @@ export function SessionList({
     setDeleteConfirmOpen(true)
   }
 
+  const handleTouchStart = (sessionId: number, e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX
+  }
+
+  const handleTouchMove = (sessionId: number, e: React.TouchEvent) => {
+    const startX = touchStartXRef.current
+    if (startX === null) return
+    const deltaX = e.touches[0].clientX - startX
+    // 左划超过 30px 显示操作按钮
+    if (deltaX < -30) {
+      setSwipedSessionId(sessionId)
+    }
+    // 右划超过 20px 收起
+    if (deltaX > 20 && swipedSessionId === sessionId) {
+      setSwipedSessionId(null)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    touchStartXRef.current = null
+  }
+
   const handleConfirmDelete = async () => {
     if (sessionToDelete !== null) {
       await onDeleteSession(sessionToDelete)
@@ -141,17 +165,27 @@ export function SessionList({
             {sessions.map(session => {
               const isActive = session.id === currentSessionId
               const isLoadingMessages = loadingMessages.has(session.id)
+              const isSwiped = swipedSessionId === session.id
               return (
                 <div
                   key={session.id}
                   onClick={() => onSelectSession(session.id)}
-                  className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
+                  onTouchStart={e => handleTouchStart(session.id, e)}
+                  onTouchMove={e => handleTouchMove(session.id, e)}
+                  onTouchEnd={handleTouchEnd}
+                  className={`group relative p-3 rounded-lg cursor-pointer transition-colors overflow-hidden ${
                     isActive
                       ? 'bg-accent text-accent-foreground'
                       : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <div className="flex items-start gap-2 pr-14">
+                  <div
+                    className="flex items-start gap-2 pr-14 md:pr-14"
+                    style={{
+                      transform: isSwiped ? 'translateX(-96px)' : 'translateX(0)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  >
                     <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <div className="font-medium text-sm flex items-center gap-2">
@@ -163,8 +197,12 @@ export function SessionList({
                       </div>
                     </div>
                   </div>
-                  {/* 操作按钮 */}
-                  <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-background/80 backdrop-blur-sm rounded">
+                  {/* 操作按钮：桌面悬停显示，移动端左划显示 */}
+                  <div
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10 bg-background/80 backdrop-blur-sm rounded px-1 py-0.5 transition-opacity ${
+                      isSwiped ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                  >
                     <Button
                       variant="ghost"
                       size="icon"
