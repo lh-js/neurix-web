@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   AlertDialog,
@@ -13,12 +13,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { LOGIN_PATH } from '@/config/auth.config'
+import { Spinner } from '@/components/ui/spinner'
 
 /**
- * 401错误处理弹窗组件
- * 监听全局的401错误事件，显示登录过期提示
+ * 401错误处理弹窗内容组件
+ * 需要被 Suspense 包裹以使用 useSearchParams
  */
-export function AuthExpiredDialog() {
+function AuthExpiredDialogContent() {
   const [open, setOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -70,5 +71,23 @@ export function AuthExpiredDialog() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+/**
+ * 401错误处理弹窗组件
+ * 监听全局的401错误事件，显示登录过期提示
+ */
+export function AuthExpiredDialog() {
+  return (
+    <Suspense
+      fallback={
+        <div className="hidden">
+          <Spinner className="h-4 w-4" />
+        </div>
+      }
+    >
+      <AuthExpiredDialogContent />
+    </Suspense>
   )
 }

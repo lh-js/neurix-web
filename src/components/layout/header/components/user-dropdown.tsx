@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
@@ -23,7 +23,7 @@ interface UserDropdownProps {
   onLogout: () => void
 }
 
-export function UserDropdown({ user, loading, onLogout }: UserDropdownProps) {
+function UserDropdownContent({ user, loading, onLogout }: UserDropdownProps) {
   const getUserInitials = (nickname: string) => nickname.slice(0, 2).toUpperCase()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -91,5 +91,13 @@ export function UserDropdown({ user, loading, onLogout }: UserDropdownProps) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+export function UserDropdown(props: UserDropdownProps) {
+  return (
+    <Suspense fallback={<Skeleton className="h-10 w-10 rounded-full" />}>
+      <UserDropdownContent {...props} />
+    </Suspense>
   )
 }
