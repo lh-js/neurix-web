@@ -36,16 +36,16 @@ export function useChatConversationList(): UseChatConversationListReturn {
       }
       lastFetchedKeyRef.current = key
 
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await getConversationList(params)
-      setData(response)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('获取聊天会话列表失败'))
-    } finally {
-      setLoading(false)
-    }
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await getConversationList(params)
+        setData(response)
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('获取聊天会话列表失败'))
+      } finally {
+        setLoading(false)
+      }
     },
     [params]
   )

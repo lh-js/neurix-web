@@ -383,6 +383,7 @@ export default function ChatPage() {
       // 静默刷新，确保与后端一致
       refreshSessionMessages(currentSessionId, { silent: true })
     } catch (error) {
+      console.error('删除消息失败', error)
       toast.error('删除消息失败')
       // 失败时重新拉取，恢复状态
       refreshSessionMessages(currentSessionId, { silent: true })
