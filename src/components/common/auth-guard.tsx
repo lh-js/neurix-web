@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { isAuthenticated, canAccessPage, buildLoginRedirectUrl } from '@/utils/auth.util'
+import { isAuthenticated, canAccessPage } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 import { Spinner } from '@/components/ui/spinner'
 import { useAuth } from '@/hooks/common/use-auth'
@@ -26,9 +26,14 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
 
   useEffect(() => {
     const authenticated = isAuthenticated()
-    const safePathname = pathname || '/'
-    const searchString = searchParams?.toString()
-    const currentFullPath = searchString ? `${safePathname}?${searchString}` : safePathname
+
+    // 无权限提示页面始终可访问，避免循环跳转
+    if (pathname === '/unauthorized') {
+      const timer = setTimeout(() => {
+        setIsChecking(false)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
 
     // 等待页面权限加载完成
     if (!pagesInitialized || pagesLoading) {
@@ -41,13 +46,13 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
     const pageInAccessibleList = canAccessPage(pathname, accessiblePages)
 
     // 接口异常时会落到兜底页面列表，此时不应该把已登录用户直接踢回登录页
-    // 兜底列表只包含登录/注册/忘记密码/根路径，若当前用户有 token，
+    // 兜底列表只包含登录/注册/忘记密码/无权限/根路径，若当前用户有 token，
     // 暂时保留在当前页面，等待后续请求成功后再由 withUser 刷新权限
     const isFallbackAccessibleList =
       authenticated &&
       accessiblePages &&
-      accessiblePages.length === 4 &&
-      [LOGIN_PATH, '/register', '/forgot-password', '/'].every(page =>
+      accessiblePages.length === 5 &&
+      [LOGIN_PATH, '/register', '/forgot-password', '/unauthorized', '/'].every(page =>
         accessiblePages.includes(page)
       )
 
@@ -96,29 +101,12 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
     }
 
     // 如果页面不在可访问列表中，说明没有权限访问
-    // 如果未登录，跳转到登录页，并记录来源页面
-    if (!authenticated) {
-      router.push(buildLoginRedirectUrl(currentFullPath))
-      return
-    }
-
-    // 已登录但页面不在可访问列表中，说明没有权限
-    // 跳转到用户有权限访问的第一个页面
-    if (accessiblePages && accessiblePages.length > 0) {
-      const firstAccessiblePage = accessiblePages[0]
-      // 优先跳转到根目录，其次跳转到列表中的第一个页面
-      if (canAccessPage('/', accessiblePages)) {
-        router.push('/')
-      } else if (firstAccessiblePage) {
-        router.push(firstAccessiblePage)
-      } else {
-        router.push(buildLoginRedirectUrl(currentFullPath))
-      }
-      return
-    }
-
-    // 如果没有任何可访问的页面，跳转到登录页
-    router.push(buildLoginRedirectUrl(currentFullPath))
+    // 跳转到无权限提示页面，带上原始页面路径作为参数
+    const safePathname = pathname || '/'
+    const searchString = searchParams?.toString()
+    const currentFullPath = searchString ? `${safePathname}?${searchString}` : safePathname
+    const redirectUrl = `/unauthorized?redirect=${encodeURIComponent(currentFullPath)}`
+    router.push(redirectUrl)
   }, [
     pathname,
     router,

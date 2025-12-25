@@ -6,7 +6,7 @@ import axios, {
 } from 'axios'
 import { toast } from 'sonner'
 import { ApiResponse, ErrorResponseData } from './types'
-import { buildLoginRedirectUrl, clearAuth, getToken } from '@/utils/auth.util'
+import { clearAuth, getToken } from '@/utils/auth.util'
 import { isClient, isDevelopment, isServer } from '@/utils/env.util'
 
 // 创建 axios 实例
@@ -95,12 +95,13 @@ request.interceptors.response.use(
       const defaultMessage = errorMessages[status] || `连接错误: ${status}`
       const errorMessage = getErrorMessage(data, defaultMessage)
 
-      // 401 特殊处理：清除 token 并跳转
+      // 401 特殊处理：触发登录过期弹窗
       if (status === 401) {
         clearAuth()
-        showErrorToast(errorMessage)
+        // 不显示 toast，由弹窗处理
         if (isClient) {
-          window.location.href = buildLoginRedirectUrl()
+          // 触发自定义事件，通知401错误处理组件显示弹窗
+          window.dispatchEvent(new CustomEvent('auth:expired'))
         }
       } else {
         showErrorToast(errorMessage)

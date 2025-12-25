@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
+import { AuthExpiredDialog } from '@/components/common/auth-expired-dialog'
+import { LoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 
 export const metadata: Metadata = {
   title: 'Neurix',
@@ -68,6 +70,8 @@ export default function RootLayout({
         <ThemeProvider>
           <ConditionalLayout>{children}</ConditionalLayout>
           <ThemedToaster />
+          <AuthExpiredDialog />
+          <LoginConfirmDialog />
         </ThemeProvider>
       </body>
     </html>

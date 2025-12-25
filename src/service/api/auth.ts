@@ -1,5 +1,6 @@
 import { post, get } from '../request'
-import { getToken, clearAuth, buildLoginRedirectUrl } from '@/utils/auth.util'
+import { getToken, clearAuth } from '@/utils/auth.util'
+import { showLoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 import {
   LoginRequest,
   LoginResponse,
@@ -148,7 +149,7 @@ export async function aiChatStream(
   if (response.status === 401) {
     clearAuth()
     if (typeof window !== 'undefined') {
-      window.location.href = buildLoginRedirectUrl()
+      showLoginConfirmDialog('登录已过期', '您的登录状态已过期，请重新登录以继续使用聊天功能。')
     }
     throw new Error('未登录或登录已过期')
   }

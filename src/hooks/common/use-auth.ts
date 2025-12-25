@@ -3,8 +3,9 @@ import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
 import { getUserInfo, logout, getAccessibleResources } from '@/service/api/auth'
-import { buildLoginRedirectUrl, isAuthenticated } from '@/utils/auth.util'
+import { isAuthenticated } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
+import { showLoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 
 /**
  * 使用用户 store 的 Hook
@@ -72,6 +73,10 @@ export function useAuth() {
       if (!pages.includes('/forgot-password')) {
         pages.push('/forgot-password')
       }
+      // 添加无权限提示页面作为公共页面
+      if (!pages.includes('/unauthorized')) {
+        pages.push('/unauthorized')
+      }
       // 添加根路径/作为保底页面
       if (!pages.includes('/')) {
         pages.push('/')
@@ -83,9 +88,15 @@ export function useAuth() {
       })
     } catch (error) {
       console.error('获取可访问资源失败:', error)
-      // 即使接口失败，也至少保证 login 页面、注册页面、忘记密码页面、和根页面可访问
+      // 即使接口失败，也至少保证 login 页面、注册页面、忘记密码页面、无权限页面、和根页面可访问
       runInAction(() => {
-        userStore.accessiblePages = [LOGIN_PATH, '/register', '/forgot-password', '/']
+        userStore.accessiblePages = [
+          LOGIN_PATH,
+          '/register',
+          '/forgot-password',
+          '/unauthorized',
+          '/',
+        ]
         userStore.accessibleElements = []
         userStore.pagesLoading = false
       })
@@ -124,7 +135,7 @@ export function useAuth() {
       userStore.pagesInitialized = false
     })
     if (typeof window !== 'undefined') {
-      window.location.href = buildLoginRedirectUrl()
+      showLoginConfirmDialog('已退出登录', '您已成功退出登录，请重新登录以继续使用。')
     }
   }
 

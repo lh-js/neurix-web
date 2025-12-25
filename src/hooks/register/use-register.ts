@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { sendEmailCode, verifyEmailCode, register } from '@/service/api/auth'
 import { SendEmailCodeRequest, VerifyEmailCodeRequest, RegisterRequest } from '@/service/types/auth'
-import { buildLoginRedirectUrl } from '@/utils/auth.util'
+import { showLoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 
 export interface RegisterFormData {
   email: string
@@ -123,9 +123,9 @@ export function useRegister() {
         clearCountdown()
         setVerificationToken('')
 
-        // 跳转到登录页面
+        // 显示登录确认弹窗
         if (typeof window !== 'undefined') {
-          window.location.href = buildLoginRedirectUrl()
+          showLoginConfirmDialog('注册成功', '您的账户已成功注册，请登录以开始使用。')
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '注册失败，请重试'

@@ -5,7 +5,7 @@ import {
   VerifyEmailCodeRequest,
   ChangePasswordRequest,
 } from '@/service/types/auth'
-import { buildLoginRedirectUrl } from '@/utils/auth.util'
+import { showLoginConfirmDialog } from '@/components/common/login-confirm-dialog'
 
 export interface ForgotPasswordFormData {
   email: string
@@ -125,9 +125,9 @@ export function useForgotPassword() {
         clearCountdown()
         setVerificationToken('')
 
-        // 跳转到登录页面
+        // 显示登录确认弹窗
         if (typeof window !== 'undefined') {
-          window.location.href = buildLoginRedirectUrl()
+          showLoginConfirmDialog('密码修改成功', '您的密码已成功修改，请使用新密码重新登录。')
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '修改密码失败，请重试'
