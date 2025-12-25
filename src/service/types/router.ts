@@ -3,8 +3,8 @@
  */
 export interface RouterRecord {
   id: number
-  path: string
-  method: string
+  url: string // 接口路径
+  methods: string[] // HTTP 方法数组，如 ['GET', 'POST']
 }
 
 /**

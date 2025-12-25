@@ -56,25 +56,34 @@ export default function RouterRecordPage() {
       render: item => <span className="text-muted-foreground">{item.id}</span>,
     },
     {
-      key: 'path',
+      key: 'url',
       header: '路径',
       render: item => (
-        <span className="text-sm font-mono" title={item.path}>
-          {item.path}
+        <span className="text-sm font-mono" title={item.url}>
+          {item.url}
         </span>
       ),
     },
     {
-      key: 'method',
+      key: 'methods',
       header: '请求方法',
       render: item => (
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getMethodColor(
-            item.method
-          )}`}
-        >
-          {item.method.toUpperCase()}
-        </span>
+        <div className="flex flex-wrap gap-1">
+          {item.methods && item.methods.length > 0 ? (
+            item.methods.map((method: string) => (
+              <span
+                key={method}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${getMethodColor(
+                  method
+                )}`}
+              >
+                {method.toUpperCase()}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm text-muted-foreground">-</span>
+          )}
+        </div>
       ),
     },
     {
@@ -148,19 +157,26 @@ export default function RouterRecordPage() {
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">路径</label>
                     <div className="mt-1 p-3 bg-muted rounded-md">
-                      <p className="text-sm font-mono break-all">{selectedRecord.path}</p>
+                      <p className="text-sm font-mono break-all">{selectedRecord.url}</p>
                     </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">请求方法</label>
-                    <div className="mt-1">
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium border ${getMethodColor(
-                          selectedRecord.method
-                        )}`}
-                      >
-                        {selectedRecord.method.toUpperCase()}
-                      </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {selectedRecord.methods && selectedRecord.methods.length > 0 ? (
+                        selectedRecord.methods.map((method: string) => (
+                          <span
+                            key={method}
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium border ${getMethodColor(
+                              method
+                            )}`}
+                          >
+                            {method.toUpperCase()}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
                     </div>
                   </div>
                 </div>

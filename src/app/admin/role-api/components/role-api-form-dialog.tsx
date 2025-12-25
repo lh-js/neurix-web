@@ -92,7 +92,9 @@ export function RoleApiFormDialog({
                     disabled={loading || routesLoading}
                   >
                     <SelectTrigger id="url">
-                      <SelectValue placeholder={routesLoading ? '加载中...' : '请选择接口'} />
+                      <SelectValue placeholder={routesLoading ? '加载中...' : '请选择接口'}>
+                        {formData.url || ''}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {availableRoutes.map(route => (
@@ -109,9 +111,7 @@ export function RoleApiFormDialog({
                   </Select>
                   {formData.url && (
                     <div className="mt-2 p-2 bg-muted rounded-md">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        该接口支持的方法：
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-1">该接口支持的方法：</p>
                       <div className="flex flex-wrap gap-1">
                         {availableRoutes
                           .find(r => r.path === formData.url)
@@ -141,9 +141,7 @@ export function RoleApiFormDialog({
                   />
                   {editing && formData.url && availableRoutes.length > 0 && (
                     <div className="mt-2 p-2 bg-muted rounded-md">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        该接口支持的方法：
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-1">该接口支持的方法：</p>
                       <div className="flex flex-wrap gap-1">
                         {availableRoutes
                           .find(r => r.path === formData.url)
@@ -165,9 +163,7 @@ export function RoleApiFormDialog({
                 </>
               )}
               {!editing && availableRoutes.length === 0 && !routesLoading && (
-                <p className="text-sm text-muted-foreground">
-                  暂无可用接口，请手动输入URL
-                </p>
+                <p className="text-sm text-muted-foreground">暂无可用接口，请手动输入URL</p>
               )}
             </div>
             <div className="space-y-2">
@@ -197,15 +193,16 @@ export function RoleApiFormDialog({
               </div>
               <div className="border rounded-md p-4 space-y-2">
                 {(() => {
-                  const selectedRoute = !editing && formData.url
-                    ? availableRoutes.find(r => r.path === formData.url)
-                    : null
+                  const selectedRoute =
+                    !editing && formData.url
+                      ? availableRoutes.find(r => r.path === formData.url)
+                      : null
                   const supportedMethods = selectedRoute?.methods || []
-                  
+
                   return httpMethods.map(method => {
                     const isSupported = supportedMethods.includes(method)
                     const isSelected = formData.methods.includes(method)
-                    
+
                     return (
                       <div key={method} className="flex items-center space-x-2">
                         <Checkbox

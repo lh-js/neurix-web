@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import type { RoleApi, CreateRoleApiRequest } from '@/service/types/role-api'
 import { getAllRouterRecords } from '@/service/api/router'
 import { getAllRoleApis } from '@/service/api/role-api'
-import type { RouterRecord, GroupedRouterRecord } from '@/service/types/router'
+import type { GroupedRouterRecord } from '@/service/types/router'
 
 interface UseRoleApiFormProps {
   fetchRoleApiById: (id: number) => Promise<RoleApi>
@@ -30,60 +30,39 @@ export function useRoleApiForm({
   const [submitting, setSubmitting] = useState(false)
   const [availableRoutes, setAvailableRoutes] = useState<GroupedRouterRecord[]>([])
   const [routesLoading, setRoutesLoading] = useState(false)
-  const [existingRoleApis, setExistingRoleApis] = useState<RoleApi[]>([])
 
-  // 获取可用的路由列表（过滤掉已存在的接口，并整合相同 URL 的不同 methods）
+  // 获取可用的路由列表（过滤掉已存在的接口）
   const fetchAvailableRoutes = async (excludeApiId?: number) => {
     try {
       setRoutesLoading(true)
-      const [routes, existingApis] = await Promise.all([
-        getAllRouterRecords(),
-        getAllRoleApis(),
-      ])
-      
-      setExistingRoleApis(existingApis)
-      
+      const [routes, existingApis] = await Promise.all([getAllRouterRecords(), getAllRoleApis()])
+
       // 过滤掉已存在的接口（根据 path 和 method 组合判断）
       // 如果传入了 excludeApiId，则不过滤该接口（用于编辑时显示当前接口支持的方法）
       const existingKeys = new Set(
         existingApis
           .filter(api => !excludeApiId || api.id !== excludeApiId) // 编辑时不过滤当前编辑的接口
-          .flatMap(api => 
-            api.methods.map(method => `${api.url}::${method}`)
+          .flatMap(api => api.methods.map(method => `${api.url}::${method}`))
+      )
+
+      // 过滤并转换路由数据
+      const grouped = routes
+        .filter(route => {
+          // 检查该路由的所有 methods 是否都已存在
+          const routeMethods = route.methods || []
+          // 如果该路由的所有 methods 都已存在，则过滤掉
+          const allMethodsExist = routeMethods.every(method =>
+            existingKeys.has(`${route.url}::${method}`)
           )
-      )
-      
-      const filtered = routes.filter(route => {
-        const key = `${route.path}::${route.method}`
-        return !existingKeys.has(key)
-      })
-      
-      // 整合相同 URL 的不同 methods
-      const groupedMap = new Map<string, GroupedRouterRecord>()
-      
-      filtered.forEach(route => {
-        const existing = groupedMap.get(route.path)
-        if (existing) {
-          // 如果该 URL 已存在，添加 method 和 id
-          if (!existing.methods.includes(route.method)) {
-            existing.methods.push(route.method)
-            existing.ids.push(route.id)
-          }
-        } else {
-          // 如果该 URL 不存在，创建新记录
-          groupedMap.set(route.path, {
-            path: route.path,
-            methods: [route.method],
-            ids: [route.id],
-          })
-        }
-      })
-      
-      // 转换为数组并排序
-      const grouped = Array.from(groupedMap.values()).sort((a, b) => 
-        a.path.localeCompare(b.path)
-      )
-      
+          return !allMethodsExist // 只要有一个 method 不存在，就保留该路由
+        })
+        .map(route => ({
+          path: route.url, // 使用 url 字段
+          methods: route.methods || [],
+          ids: [route.id], // 现在每个路由只有一个 id
+        }))
+        .sort((a, b) => a.path.localeCompare(b.path))
+
       setAvailableRoutes(grouped)
     } catch (err) {
       console.error('获取路由列表失败:', err)
@@ -118,7 +97,7 @@ export function useRoleApiForm({
         fetchRoleApiById(item.id),
         fetchAvailableRoutes(item.id), // 编辑时传入当前 ID，不过滤该接口
       ])
-      
+
       setFormData({
         url: roleApi.url,
         description: roleApi.description,

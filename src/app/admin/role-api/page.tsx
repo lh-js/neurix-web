@@ -5,12 +5,14 @@ import { useRoleApiForm } from '@/hooks/admin/role-api/use-role-api-form'
 import { useDeleteDialog } from '@/hooks/common/use-delete-dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Shield, Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { Shield, Plus, Pencil, Trash2, Search, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable, type DataTableColumn } from '@/components/common/data-table'
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog'
 import { RoleApiFormDialog } from './components/role-api-form-dialog'
+import { SyncDialog } from './components/sync-dialog'
 import { BooleanFilter } from '@/components/common/boolean-filter'
+import { useRoleApiSync } from '@/hooks/admin/role-api/use-role-api-sync'
 import {
   CreatePermissionButton,
   EditPermissionButton,
@@ -18,6 +20,7 @@ import {
 } from '@/components/common/permission-button'
 import { useAuth } from '@/hooks/common/use-auth'
 import type { RoleApi } from '@/service/types/role-api'
+import { useState, useEffect } from 'react'
 
 export default function RoleApiPage() {
   const { accessibleElements, pagesLoading } = useAuth()
@@ -158,6 +161,45 @@ export default function RoleApiPage() {
     successMessage: '删除成功',
   })
 
+  const [isSyncDialogOpen, setIsSyncDialogOpen] = useState(false)
+  const {
+    syncing,
+    checking,
+    progress,
+    currentItem,
+    total,
+    completed,
+    syncDiff,
+    checkDiff,
+    sync,
+    reset,
+  } = useRoleApiSync()
+
+  // 对话框打开时重置状态（仅在首次打开时重置，避免检查完成后重置）
+  useEffect(() => {
+    if (isSyncDialogOpen && !syncing && !checking && !syncDiff) {
+      reset()
+    }
+  }, [isSyncDialogOpen, syncing, checking, syncDiff, reset])
+
+  const handleCheck = async (defaultIsPublic: boolean, checkExisting: boolean) => {
+    const diff = await checkDiff(defaultIsPublic, checkExisting)
+    console.log('[RoleApiPage] 检查完成，syncDiff:', {
+      toCreate: diff.toCreate.length,
+      toUpdate: diff.toUpdate.length,
+      toDelete: diff.toDelete.length,
+      diff,
+    })
+  }
+
+  const handleSync = async () => {
+    if (!syncDiff) return
+    await sync(syncDiff, () => {
+      setIsSyncDialogOpen(false)
+      fetchList() // 同步完成后刷新列表
+    })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -168,6 +210,14 @@ export default function RoleApiPage() {
             <Button onClick={fetchList} variant="outline" disabled={loading}>
               <Search className="h-4 w-4 mr-2" />
               查询
+            </Button>
+            <Button
+              onClick={() => setIsSyncDialogOpen(true)}
+              variant="outline"
+              disabled={loading || syncing}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              一键同步
             </Button>
             <CreatePermissionButton onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
@@ -237,6 +287,46 @@ export default function RoleApiPage() {
         deleting={deleting}
         onConfirm={confirmDelete}
         onCancel={handleCancel}
+      />
+
+      <SyncDialog
+        open={isSyncDialogOpen}
+        onOpenChange={setIsSyncDialogOpen}
+        onCheck={handleCheck}
+        onConfirm={handleSync}
+        checking={checking}
+        syncing={syncing}
+        progress={progress}
+        currentItem={currentItem}
+        total={total}
+        completed={completed}
+        syncDiff={
+          syncDiff
+            ? (() => {
+                const converted = {
+                  toCreate: syncDiff.toCreate.map(item => ({
+                    url: item.url,
+                    methods: item.methods,
+                  })),
+                  toUpdate: syncDiff.toUpdate.map(item => ({
+                    url: item.api.url,
+                    methods: item.newMethods,
+                  })),
+                  toDelete: syncDiff.toDelete.map(item => ({
+                    url: item.url,
+                    id: item.id,
+                  })),
+                }
+                console.log('[RoleApiPage] 转换后的 syncDiff:', {
+                  toCreate: converted.toCreate.length,
+                  toUpdate: converted.toUpdate.length,
+                  toDelete: converted.toDelete.length,
+                  converted,
+                })
+                return converted
+              })()
+            : null
+        }
       />
     </div>
   )
