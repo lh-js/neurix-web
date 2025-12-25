@@ -27,4 +27,3 @@ export interface RouterRecordListResponse {
   hasPreviousPage: boolean
   hasNextPage: boolean
 }
-

@@ -109,10 +109,7 @@ export default function ChatConversationPage() {
 
   return (
     <>
-      <PageHeader
-        title="聊天会话日志"
-        icon={MessageSquare}
-      />
+      <PageHeader title="聊天会话日志" icon={MessageSquare} />
 
       {error && (
         <Alert variant="destructive" className="mb-4">

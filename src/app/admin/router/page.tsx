@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Route, Search, Eye, Code2 } from 'lucide-react'
+import { Route, Search, Eye } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { DataTable } from '@/components/common/data-table'
 import type { RouterRecord } from '@/service/types/router'
@@ -172,4 +172,3 @@ export default function RouterRecordPage() {
     </>
   )
 }
-

@@ -35,6 +35,9 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
+  const inputContainerRef = useRef<HTMLDivElement>(null)
+  const isKeyboardOpenRef = useRef(false)
+  const focusTimeoutsRef = useRef<NodeJS.Timeout[]>([])
 
   // 当会话切换时，确保有当前会话
   useEffect(() => {
@@ -125,6 +128,155 @@ export default function ChatPage() {
       handleSendMessage()
     }
   }
+
+  // 处理输入框触摸开始事件（移动端提前处理）
+  // 注意：不在这里滚动，让浏览器自然处理键盘弹出
+  const handleInputTouchStart = () => {
+    // 清除之前的延迟定时器，准备新的调整
+    focusTimeoutsRef.current.forEach(timeout => clearTimeout(timeout))
+    focusTimeoutsRef.current = []
+  }
+
+  // 处理输入框失去焦点事件（更新键盘状态并重置页面位置）
+  // 在 iOS 上，点击键盘关闭按钮时，浏览器会自动将页面滚动到输入框的自然位置
+  // 我们需要模拟这个行为，确保点击页面其他位置时也能正确重置
+  const handleInputBlur = () => {
+    // 更新键盘状态为关闭
+    isKeyboardOpenRef.current = false
+    // 清除所有延迟定时器
+    focusTimeoutsRef.current.forEach(timeout => clearTimeout(timeout))
+    focusTimeoutsRef.current = []
+
+    // 检测是否为移动设备
+    const isMobile =
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+      (typeof window !== 'undefined' && window.innerWidth < 768)
+
+    if (!isMobile || !inputContainerRef.current) return
+
+    // 延迟重置页面位置，等待键盘收起动画完成
+    // 模拟点击键盘关闭按钮的行为：将页面滚动到输入框的自然位置
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        const viewport = window.visualViewport
+        const windowHeight = window.innerHeight
+        // 如果键盘已经收起（视口高度接近窗口高度）
+        if (viewport.height >= windowHeight * 0.9) {
+          // 使用 scrollIntoView 将输入框滚动到自然位置
+          // 这模拟了点击键盘关闭按钮时浏览器的行为
+          // 使用 'nearest' 和 'end' 确保输入框在视口底部可见
+          inputContainerRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest',
+          })
+
+          // 额外处理：确保输入框在视口内的合适位置
+          // 延迟执行，等待 scrollIntoView 完成
+          setTimeout(() => {
+            if (inputContainerRef.current) {
+              const inputRect = inputContainerRef.current.getBoundingClientRect()
+              const viewportHeight = viewport.height
+
+              // 如果输入框太靠近底部或超出视口，调整位置
+              // 但不要调整太多，保持输入框在自然位置
+              if (inputRect.bottom > viewportHeight - 20) {
+                // 轻微调整，让输入框在视口内可见
+                const scrollOffset = inputRect.bottom - viewportHeight + 30
+                window.scrollBy({
+                  top: scrollOffset,
+                  behavior: 'smooth',
+                })
+              }
+            }
+          }, 100)
+        }
+      } else {
+        // 降级方案：如果没有 visualViewport，直接使用 scrollIntoView
+        if (inputContainerRef.current) {
+          inputContainerRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest',
+          })
+        }
+      }
+    }, 300) // 等待键盘收起动画完成
+  }
+
+  // 处理输入框焦点事件（移动端键盘弹出问题修复）
+  // 不在这里立即滚动，让浏览器自然处理键盘弹出，我们只做微调
+  const handleInputFocus = () => {
+    // 检测是否为移动设备
+    const isMobile =
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+      (typeof window !== 'undefined' && window.innerWidth < 768)
+
+    if (!isMobile || !inputContainerRef.current) return
+
+    // 清除之前的延迟定时器
+    focusTimeoutsRef.current.forEach(timeout => clearTimeout(timeout))
+    focusTimeoutsRef.current = []
+
+    // 不在这里预调整，让 visualViewport 监听来处理，保持平滑效果
+  }
+
+  // 监听 visualViewport 变化（键盘弹出/收起）
+  // 这是主要的调整逻辑，只在键盘真正弹出时才调整位置
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+
+    const viewport = window.visualViewport
+    let lastHeight = viewport.height
+
+    const handleViewportResize = () => {
+      // 快速检查：如果输入框没有焦点，直接返回
+      if (inputRef.current !== document.activeElement) {
+        lastHeight = viewport.height
+        return
+      }
+
+      const currentHeight = viewport.height
+      const heightDiff = lastHeight - currentHeight
+
+      // 最低触发阈值 1px，键盘刚开始弹出立即检测，最快响应
+      if (heightDiff > 1) {
+        isKeyboardOpenRef.current = true
+
+        // 立即同步调整，确保最快响应
+        if (inputContainerRef.current) {
+          const inputRect = inputContainerRef.current.getBoundingClientRect()
+          const viewportHeight = currentHeight
+
+          // 计算输入框是否被键盘遮挡（无容差，立即触发）
+          const distanceToBottom = inputRect.bottom - viewportHeight
+
+          // 如果输入框被键盘遮挡或接近底部，立即调整位置
+          if (distanceToBottom > 0) {
+            const scrollOffset = distanceToBottom + 20 // 20px 额外间距
+            // 使用 smooth 平滑滚动，保持过渡效果，同时保持快速响应
+            window.scrollBy({
+              top: scrollOffset,
+              behavior: 'smooth', // 平滑滚动，保持过渡效果
+            })
+          }
+        }
+      } else if (heightDiff < -1) {
+        // 键盘收起
+        isKeyboardOpenRef.current = false
+      }
+
+      lastHeight = currentHeight
+    }
+
+    viewport.addEventListener('resize', handleViewportResize)
+    viewport.addEventListener('scroll', handleViewportResize)
+
+    return () => {
+      viewport.removeEventListener('resize', handleViewportResize)
+      viewport.removeEventListener('scroll', handleViewportResize)
+    }
+  }, [])
 
   // 渲染消息（不包含 key，key 在 map 中处理）
   const renderMessage = (message: ChatMessage, isStreamingMessage = false) => {
@@ -349,7 +501,10 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative">
+          <div
+            ref={inputContainerRef}
+            className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative"
+          >
             {/* 输入框区域的渐变效果 */}
             <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none" />
             <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 relative z-10">
@@ -361,6 +516,9 @@ export default function ChatPage() {
                       value={inputValue}
                       onChange={e => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
+                      onTouchStart={handleInputTouchStart}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
                       placeholder="输入您的问题..."
                       disabled={isLoading}
                       className="pr-10 sm:pr-12 min-h-[44px] sm:min-h-[48px] py-2.5 sm:py-3 text-base transition-all duration-300 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 group-hover:border-primary/30"
