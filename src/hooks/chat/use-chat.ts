@@ -107,7 +107,6 @@ export function useChat({
             role: msg.role,
             content: msg.content,
           })),
-          stream: useStream,
           conversationId, // 传递会话ID，后端会自动保存消息
         }
 
