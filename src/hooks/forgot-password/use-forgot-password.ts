@@ -5,6 +5,7 @@ import {
   VerifyEmailCodeRequest,
   ChangePasswordRequest,
 } from '@/service/types/auth'
+import { buildLoginRedirectUrl } from '@/utils/auth.util'
 
 export interface ForgotPasswordFormData {
   email: string
@@ -126,7 +127,7 @@ export function useForgotPassword() {
 
         // 跳转到登录页面
         if (typeof window !== 'undefined') {
-          window.location.href = '/login'
+          window.location.href = buildLoginRedirectUrl()
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : '修改密码失败，请重试'

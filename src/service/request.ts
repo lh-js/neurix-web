@@ -1,4 +1,3 @@
-import { LOGIN_PATH } from '@/config/auth.config'
 import axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -7,7 +6,7 @@ import axios, {
 } from 'axios'
 import { toast } from 'sonner'
 import { ApiResponse, ErrorResponseData } from './types'
-import { clearAuth, getToken } from '@/utils/auth.util'
+import { buildLoginRedirectUrl, clearAuth, getToken } from '@/utils/auth.util'
 import { isClient, isDevelopment, isServer } from '@/utils/env.util'
 
 // 创建 axios 实例
@@ -101,7 +100,7 @@ request.interceptors.response.use(
         clearAuth()
         showErrorToast(errorMessage)
         if (isClient) {
-          window.location.href = LOGIN_PATH
+          window.location.href = buildLoginRedirectUrl()
         }
       } else {
         showErrorToast(errorMessage)

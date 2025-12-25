@@ -1,6 +1,5 @@
 import { post, get } from '../request'
-import { LOGIN_PATH } from '@/config/auth.config'
-import { getToken, clearAuth } from '@/utils/auth.util'
+import { getToken, clearAuth, buildLoginRedirectUrl } from '@/utils/auth.util'
 import {
   LoginRequest,
   LoginResponse,
@@ -149,7 +148,7 @@ export async function aiChatStream(
   if (response.status === 401) {
     clearAuth()
     if (typeof window !== 'undefined') {
-      window.location.href = LOGIN_PATH
+      window.location.href = buildLoginRedirectUrl()
     }
     throw new Error('未登录或登录已过期')
   }

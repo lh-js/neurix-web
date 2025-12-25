@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
 import { getUserInfo, logout, getAccessibleResources } from '@/service/api/auth'
-import { isAuthenticated } from '@/utils/auth.util'
+import { buildLoginRedirectUrl, isAuthenticated } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 
 /**
@@ -124,13 +124,7 @@ export function useAuth() {
       userStore.pagesInitialized = false
     })
     if (typeof window !== 'undefined') {
-      // 记录当前页面作为重定向参数
-      const currentPath = window.location.pathname
-      const redirectUrl =
-        currentPath !== LOGIN_PATH
-          ? `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}`
-          : LOGIN_PATH
-      window.location.href = redirectUrl
+      window.location.href = buildLoginRedirectUrl()
     }
   }
 

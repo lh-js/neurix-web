@@ -1,6 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
 import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { UserInfo } from '@/service/types/auth'
-import { LOGIN_PATH } from '@/config/auth.config'
+import { buildLoginRedirectUrl } from '@/utils/auth.util'
 
 interface UserDropdownProps {
   user: UserInfo | null
@@ -23,6 +25,14 @@ interface UserDropdownProps {
 
 export function UserDropdown({ user, loading, onLogout }: UserDropdownProps) {
   const getUserInitials = (nickname: string) => nickname.slice(0, 2).toUpperCase()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const loginHref = useMemo(() => {
+    const safePathname = pathname || '/'
+    const searchString = searchParams?.toString()
+    const currentFullPath = searchString ? `${safePathname}?${searchString}` : safePathname
+    return buildLoginRedirectUrl(currentFullPath)
+  }, [pathname, searchParams])
 
   if (loading) {
     return <Skeleton className="h-10 w-10 rounded-full" />
@@ -30,7 +40,7 @@ export function UserDropdown({ user, loading, onLogout }: UserDropdownProps) {
 
   if (!user) {
     return (
-      <Link href={LOGIN_PATH}>
+      <Link href={loginHref}>
         <Button variant="default" size="default">
           登录
         </Button>

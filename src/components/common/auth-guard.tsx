@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { isAuthenticated, canAccessPage } from '@/utils/auth.util'
+import { isAuthenticated, canAccessPage, buildLoginRedirectUrl } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 import { Spinner } from '@/components/ui/spinner'
 import { useAuth } from '@/hooks/common/use-auth'
@@ -26,6 +26,9 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
 
   useEffect(() => {
     const authenticated = isAuthenticated()
+    const safePathname = pathname || '/'
+    const searchString = searchParams?.toString()
+    const currentFullPath = searchString ? `${safePathname}?${searchString}` : safePathname
 
     // 等待页面权限加载完成
     if (!pagesInitialized || pagesLoading) {
@@ -95,8 +98,7 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
     // 如果页面不在可访问列表中，说明没有权限访问
     // 如果未登录，跳转到登录页，并记录来源页面
     if (!authenticated) {
-      const redirectUrl = `${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`
-      router.push(redirectUrl)
+      router.push(buildLoginRedirectUrl(currentFullPath))
       return
     }
 
@@ -110,13 +112,13 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
       } else if (firstAccessiblePage) {
         router.push(firstAccessiblePage)
       } else {
-        router.push(LOGIN_PATH)
+        router.push(buildLoginRedirectUrl(currentFullPath))
       }
       return
     }
 
     // 如果没有任何可访问的页面，跳转到登录页
-    router.push(LOGIN_PATH)
+    router.push(buildLoginRedirectUrl(currentFullPath))
   }, [
     pathname,
     router,

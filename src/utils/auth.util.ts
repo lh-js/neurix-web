@@ -1,3 +1,6 @@
+import { LOGIN_PATH } from '@/config/auth.config'
+import { isClient } from './env.util'
+
 /**
  * 获取 token
  */
@@ -38,6 +41,27 @@ export const clearAuth = () => {
     localStorage.removeItem('token')
     sessionStorage.removeItem('token')
   }
+}
+
+/**
+ * 构建带来源信息的登录链接
+ * 默认使用当前页面的完整路径（包含查询与 hash）
+ */
+export const buildLoginRedirectUrl = (from?: string): string => {
+  const currentPath =
+    from ||
+    (isClient ? `${window.location.pathname}${window.location.search}${window.location.hash}` : '')
+
+  if (!currentPath) {
+    return LOGIN_PATH
+  }
+
+  // 已经在登录页时不重复追加 redirect 参数，避免循环跳转
+  if (currentPath === LOGIN_PATH || currentPath.startsWith(`${LOGIN_PATH}?`)) {
+    return LOGIN_PATH
+  }
+
+  return `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}`
 }
 
 /**
