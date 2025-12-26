@@ -22,13 +22,29 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isChecking, setIsChecking] = useState(true)
-  const { user, loading, initialized, accessiblePages, pagesLoading, pagesInitialized } = useAuth()
+  const {
+    user,
+    loading,
+    initialized,
+    accessiblePages,
+    pagesLoading,
+    pagesInitialized,
+    networkError,
+  } = useAuth()
 
   useEffect(() => {
     const authenticated = isAuthenticated()
 
-    // 无权限提示页面始终可访问，避免循环跳转
-    if (pathname === '/unauthorized') {
+    // 系统功能页面始终可访问，避免循环跳转
+    // 这些页面不依赖接口返回，是系统必需的
+    const systemPages = [
+      '/unauthorized',
+      '/network-error',
+      LOGIN_PATH,
+      '/register',
+      '/forgot-password',
+    ]
+    if (systemPages.includes(pathname)) {
       const timer = setTimeout(() => {
         setIsChecking(false)
       }, 0)
@@ -40,21 +56,20 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
       return
     }
 
+    // 如果检测到网络错误，跳转到网络错误页面
+    if (networkError && pathname !== '/network-error') {
+      const safePathname = pathname || '/'
+      const searchString = searchParams?.toString()
+      const currentFullPath = searchString ? `${safePathname}?${searchString}` : safePathname
+      const redirectUrl = `/network-error?redirect=${encodeURIComponent(currentFullPath)}`
+      router.push(redirectUrl)
+      return
+    }
+
     // 检查页面是否在可访问页面列表中
     // 如果登录：返回用户可访问的页面 + 公共页面
     // 如果未登录：只返回公共页面
     const pageInAccessibleList = canAccessPage(pathname, accessiblePages)
-
-    // 接口异常时会落到兜底页面列表，此时不应该把已登录用户直接踢回登录页
-    // 兜底列表只包含登录/注册/忘记密码/无权限/根路径，若当前用户有 token，
-    // 暂时保留在当前页面，等待后续请求成功后再由 withUser 刷新权限
-    const isFallbackAccessibleList =
-      authenticated &&
-      accessiblePages &&
-      accessiblePages.length === 5 &&
-      [LOGIN_PATH, '/register', '/forgot-password', '/unauthorized', '/'].every(page =>
-        accessiblePages.includes(page)
-      )
 
     // 如果页面在可访问列表中，允许访问
     if (pageInAccessibleList) {
@@ -92,14 +107,6 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
       return () => clearTimeout(timer)
     }
 
-    // 当权限接口失败时，使用兜底页面列表，保持在当前页面而不是跳回登录
-    if (isFallbackAccessibleList) {
-      const timer = setTimeout(() => {
-        setIsChecking(false)
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-
     // 如果页面不在可访问列表中，说明没有权限访问
     // 跳转到无权限提示页面，带上原始页面路径作为参数
     const safePathname = pathname || '/'
@@ -117,12 +124,24 @@ const AuthGuardInnerBase = ({ children }: AuthGuardProps) => {
     accessiblePages,
     pagesLoading,
     pagesInitialized,
+    networkError,
   ])
 
-  // 检查中显示加载状态
+  // 检查中显示加载状态（使用固定定位，确保位置一致）
+  useEffect(() => {
+    if (isChecking || !initialized || loading || !pagesInitialized || pagesLoading) {
+      // 禁用 body 滚动，避免滚动条影响位置
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [isChecking, initialized, loading, pagesInitialized, pagesLoading])
+
   if (isChecking || !initialized || loading || !pagesInitialized || pagesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
         <div className="flex flex-col items-center gap-4">
           <Spinner className="h-8 w-8" />
           <p className="text-sm text-muted-foreground">加载中...</p>
@@ -142,18 +161,29 @@ const AuthGuardInner = withUser(AuthGuardInnerBase) as typeof AuthGuardInnerBase
  * 检查用户登录状态和页面访问权限，保护需要登录的页面
  * 使用 Suspense 包裹以支持 Next.js 静态生成
  */
+const AuthGuardFallback = () => {
+  useEffect(() => {
+    // 禁用 body 滚动，避免滚动条影响位置
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
+      <div className="flex flex-col items-center gap-4">
+        <Spinner className="h-8 w-8" />
+        <p className="text-sm text-muted-foreground">加载中...</p>
+      </div>
+    </div>
+  )
+}
+
 export function AuthGuard({ children }: AuthGuardProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Spinner className="h-8 w-8" />
-            <p className="text-sm text-muted-foreground">加载中...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthGuardFallback />}>
       <AuthGuardInner>{children}</AuthGuardInner>
     </Suspense>
   )

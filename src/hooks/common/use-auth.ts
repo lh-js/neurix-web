@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { runInAction } from 'mobx'
 import { userStore } from '@/stores/user-store'
 import { getUserInfo, logout, getAccessibleResources } from '@/service/api/auth'
-import { isAuthenticated } from '@/utils/auth.util'
+import { isAuthenticated, isNetworkError } from '@/utils/auth.util'
 import { LOGIN_PATH } from '@/config/auth.config'
 
 /**
@@ -55,50 +55,53 @@ export function useAuth() {
 
   // 获取可访问资源（无论是否登录都会请求）
   const fetchAccessibleResources = async () => {
+    // 如果正在加载中，避免重复请求
+    if (userStore.pagesLoading) {
+      return
+    }
+
     runInAction(() => {
       userStore.pagesLoading = true
     })
 
     try {
       const response = await getAccessibleResources()
+      // 完全按照接口返回的来，不添加额外的页面
       const pages = [...(response.accessiblePages || [])]
       const elements = response.accessibleElements || []
-      if (!pages.includes(LOGIN_PATH)) {
-        pages.push(LOGIN_PATH)
-      }
-      if (!pages.includes('/register')) {
-        pages.push('/register')
-      }
-      if (!pages.includes('/forgot-password')) {
-        pages.push('/forgot-password')
-      }
-      // 添加无权限提示页面作为公共页面
-      if (!pages.includes('/unauthorized')) {
-        pages.push('/unauthorized')
-      }
-      // 添加根路径/作为保底页面
-      if (!pages.includes('/')) {
-        pages.push('/')
-      }
       runInAction(() => {
         userStore.accessiblePages = pages
         userStore.accessibleElements = elements
         userStore.pagesLoading = false
+        userStore.pagesInitialized = true
+        // 成功获取资源后清除网络错误状态
+        userStore.networkError = false
       })
     } catch (error) {
       console.error('获取可访问资源失败:', error)
-      // 即使接口失败，也至少保证 login 页面、注册页面、忘记密码页面、无权限页面、和根页面可访问
-      runInAction(() => {
-        userStore.accessiblePages = [
-          LOGIN_PATH,
-          '/register',
-          '/forgot-password',
-          '/unauthorized',
-          '/',
-        ]
-        userStore.accessibleElements = []
-        userStore.pagesLoading = false
-      })
+
+      // 检测是否是网络错误
+      if (isNetworkError(error)) {
+        runInAction(() => {
+          userStore.networkError = true
+          // 网络错误时，只保留网络错误页面，其他页面都不能访问
+          userStore.accessiblePages = ['/network-error']
+          userStore.accessibleElements = []
+          userStore.pagesLoading = false
+          // 网络错误时，保持 pagesInitialized 为 true，避免重复请求
+          userStore.pagesInitialized = true
+        })
+      } else {
+        // 非网络错误，接口失败时，不设置任何可访问页面
+        // 用户将无法访问任何页面（除了系统自动跳转的页面）
+        runInAction(() => {
+          userStore.networkError = false
+          userStore.accessiblePages = []
+          userStore.accessibleElements = []
+          userStore.pagesLoading = false
+          userStore.pagesInitialized = true
+        })
+      }
     }
   }
 
@@ -106,6 +109,24 @@ export function useAuth() {
   useEffect(() => {
     if ((userStore.initialized && userStore.pagesInitialized) || typeof window === 'undefined') {
       return
+    }
+
+    // 如果已经在网络错误页面，且 URL 中有 redirect 参数，说明是从其他页面跳转过来的
+    // 此时不应该自动请求，等待用户手动重试或网络恢复
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname
+      const urlParams = new URLSearchParams(window.location.search)
+      const hasRedirect = urlParams.has('redirect')
+
+      if (currentPath === '/network-error' && hasRedirect) {
+        // 在网络错误页面，如果有 redirect 参数，不自动请求
+        // 直接设置 pagesInitialized 为 true，避免重复请求
+        runInAction(() => {
+          userStore.initialized = true
+          userStore.pagesInitialized = true
+        })
+        return
+      }
     }
 
     runInAction(() => {
@@ -147,6 +168,7 @@ export function useAuth() {
     accessibleElements: userStore.accessibleElements,
     pagesLoading: userStore.pagesLoading,
     pagesInitialized: userStore.pagesInitialized,
+    networkError: userStore.networkError,
     fetchUserInfo,
     refreshUserInfo,
     fetchAccessibleResources,

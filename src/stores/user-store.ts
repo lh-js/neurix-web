@@ -9,6 +9,7 @@ class UserStore {
   accessibleElements: string[] = []
   pagesLoading = false
   pagesInitialized = false
+  networkError = false
 
   constructor() {
     makeAutoObservable(this)

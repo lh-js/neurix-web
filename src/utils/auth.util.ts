@@ -115,3 +115,44 @@ export function canAccessPage(
   // 只做精确匹配
   return accessiblePages.includes(pathname)
 }
+
+/**
+ * 检查错误是否是网络错误
+ * @param error 错误对象
+ * @returns 是否是网络错误
+ */
+export function isNetworkError(error: unknown): boolean {
+  if (!error) return false
+
+  // 检查是否是 AxiosError
+  if (typeof error === 'object' && error !== null) {
+    const err = error as { request?: unknown; code?: string; message?: string }
+
+    // 如果有 request 但没有 response，说明是网络错误
+    if (err.request && !('response' in error)) {
+      return true
+    }
+
+    // 检查错误代码
+    if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
+      return true
+    }
+
+    // 检查错误消息
+    if (err.message) {
+      const message = err.message.toLowerCase()
+      if (
+        message.includes('network') ||
+        message.includes('网络') ||
+        message.includes('timeout') ||
+        message.includes('超时') ||
+        message.includes('failed to fetch') ||
+        message.includes('networkerror')
+      ) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
