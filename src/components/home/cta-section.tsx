@@ -1,5 +1,3 @@
-import { ScrollReveal } from '@/components/common/scroll-reveal'
-
 export function CTASection() {
   return (
     <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
@@ -16,7 +14,7 @@ export function CTASection() {
       </div>
 
       <div className="relative mx-auto max-w-4xl px-4 py-20 md:py-28 text-center">
-        <ScrollReveal direction="up">
+        <header>
           <h2 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               准备好开始了吗？
@@ -25,17 +23,15 @@ export function CTASection() {
           <p className="mb-10 text-lg text-muted-foreground md:text-xl">
             立即开始体验 Neurix 的强大功能，让 AI 帮你提高工作效率。 无需注册，直接开始使用。
           </p>
-        </ScrollReveal>
+        </header>
 
-        <ScrollReveal direction="up" delay={200}>
-          <a
-            href="/chat"
-            className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg bg-primary px-10 py-4 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl animate-glow"
-          >
-            <span className="relative z-10">立即开始对话</span>
-            <span className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary opacity-0 transition-opacity group-hover:opacity-100 animate-shimmer" />
-          </a>
-        </ScrollReveal>
+        <a
+          href="/chat"
+          className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg bg-primary px-10 py-4 text-lg font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl animate-glow"
+        >
+          <span className="relative z-10">立即开始对话</span>
+          <span className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary opacity-0 transition-opacity group-hover:opacity-100 animate-shimmer" />
+        </a>
       </div>
     </section>
   )

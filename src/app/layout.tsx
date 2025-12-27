@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { ConditionalLayout } from '@/components/common/conditional-layout'
 import { ThemeProvider, ThemedToaster } from '@/components/providers/theme-provider'
 import { AuthExpiredDialog } from '@/components/common/auth-expired-dialog'
 import { LoginConfirmDialog } from '@/components/common/login-confirm-dialog'
+import { HomeLayout } from '@/components/layout/home-layout'
 
 export const metadata: Metadata = {
   title: 'Neurix',
@@ -68,7 +68,7 @@ export default function RootLayout({
       </head>
       <body className="h-screen flex flex-col bg-background">
         <ThemeProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <HomeLayout>{children}</HomeLayout>
           <ThemedToaster />
           <AuthExpiredDialog />
           <LoginConfirmDialog />

@@ -1,5 +1,3 @@
-import { ScrollReveal } from '@/components/common/scroll-reveal'
-
 export function FAQSection() {
   const faqs = [
     {
@@ -31,27 +29,26 @@ export function FAQSection() {
   return (
     <section className="border-b border-border/40">
       <div className="mx-auto max-w-4xl px-4 py-20 md:py-28">
-        <ScrollReveal direction="up">
-          <header className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                常见问题
-              </span>
-            </h2>
-            <p className="text-base text-muted-foreground md:text-lg">
-              关于 Neurix 的一些常见问题解答
-            </p>
-          </header>
-        </ScrollReveal>
+        <header className="mb-12 text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              常见问题
+            </span>
+          </h2>
+          <p className="text-base text-muted-foreground md:text-lg">
+            关于 Neurix 的一些常见问题解答
+          </p>
+        </header>
 
         <div className="space-y-6">
-          {faqs.map((faq, idx) => (
-            <ScrollReveal key={faq.q} direction="up" delay={idx * 100}>
-              <article className="rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-md hover-lift">
-                <h3 className="mb-3 text-lg font-semibold text-foreground">{faq.q}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
-              </article>
-            </ScrollReveal>
+          {faqs.map(faq => (
+            <article
+              key={faq.q}
+              className="rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-md hover-lift"
+            >
+              <h3 className="mb-3 text-lg font-semibold text-foreground">{faq.q}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
+            </article>
           ))}
         </div>
       </div>

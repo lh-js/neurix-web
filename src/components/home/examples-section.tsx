@@ -1,5 +1,3 @@
-import { ScrollReveal } from '@/components/common/scroll-reveal'
-
 export function ExamplesSection() {
   const categories = [
     {
@@ -73,39 +71,38 @@ export function ExamplesSection() {
   return (
     <section className="border-b border-border/40">
       <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
-        <ScrollReveal direction="up">
-          <header className="mx-auto mb-16 max-w-3xl text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                实用的对话示例
-              </span>
-            </h2>
-            <p className="text-base text-muted-foreground md:text-lg">
-              以下是一些可以直接使用的提示词示例，帮助你快速上手。每个类别都提供了多个实际场景，
-              你可以直接复制使用或根据需求调整。
-            </p>
-          </header>
-        </ScrollReveal>
+        <header className="mx-auto mb-16 max-w-3xl text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              实用的对话示例
+            </span>
+          </h2>
+          <p className="text-base text-muted-foreground md:text-lg">
+            以下是一些可以直接使用的提示词示例，帮助你快速上手。每个类别都提供了多个实际场景，
+            你可以直接复制使用或根据需求调整。
+          </p>
+        </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category, idx) => (
-            <ScrollReveal key={category.category} direction="up" delay={idx * 100}>
-              <article className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="text-2xl animate-float">{category.icon}</span>
-                  <h3 className="text-lg font-semibold text-foreground">{category.category}</h3>
-                </div>
-                <ul className="space-y-2.5 text-sm text-muted-foreground">
-                  {category.examples.map(example => (
-                    <li key={example} className="flex items-start gap-2">
-                      <span className="mt-1.5 h-1 w-1 rounded-full bg-primary/40" />
-                      <span className="leading-relaxed">{example}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
-              </article>
-            </ScrollReveal>
+          {categories.map(category => (
+            <article
+              key={category.category}
+              className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <span className="text-2xl animate-float">{category.icon}</span>
+                <h3 className="text-lg font-semibold text-foreground">{category.category}</h3>
+              </div>
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
+                {category.examples.map(example => (
+                  <li key={example} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1 w-1 rounded-full bg-primary/40" />
+                    <span className="leading-relaxed">{example}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </article>
           ))}
         </div>
       </div>

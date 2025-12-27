@@ -1,5 +1,3 @@
-import { ScrollReveal } from '@/components/common/scroll-reveal'
-
 export function TechFeaturesSection() {
   const features = [
     {
@@ -37,31 +35,30 @@ export function TechFeaturesSection() {
   return (
     <section className="border-b border-border/40 bg-muted/20">
       <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
-        <ScrollReveal direction="up">
-          <header className="mx-auto mb-16 max-w-3xl text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                强大的技术能力
-              </span>
-            </h2>
-            <p className="text-base text-muted-foreground md:text-lg">
-              Neurix 不仅功能强大，在技术实现上也采用了现代化的方案， 确保稳定性和性能。
-            </p>
-          </header>
-        </ScrollReveal>
+        <header className="mx-auto mb-16 max-w-3xl text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              强大的技术能力
+            </span>
+          </h2>
+          <p className="text-base text-muted-foreground md:text-lg">
+            Neurix 不仅功能强大，在技术实现上也采用了现代化的方案， 确保稳定性和性能。
+          </p>
+        </header>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, idx) => (
-            <ScrollReveal key={feature.title} direction="up" delay={idx * 100}>
-              <div className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift">
-                <div className="mb-3 inline-block rounded-lg bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                  {feature.feature}
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+          {features.map(feature => (
+            <article
+              key={feature.title}
+              className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift"
+            >
+              <div className="mb-3 inline-block rounded-lg bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                {feature.feature}
               </div>
-            </ScrollReveal>
+              <h3 className="mb-2 text-lg font-semibold text-foreground">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+            </article>
           ))}
         </div>
       </div>

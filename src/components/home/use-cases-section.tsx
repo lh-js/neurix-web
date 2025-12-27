@@ -1,5 +1,3 @@
-import { ScrollReveal } from '@/components/common/scroll-reveal'
-
 export function UseCasesSection() {
   const useCases = [
     {
@@ -27,43 +25,38 @@ export function UseCasesSection() {
   return (
     <section className="border-b border-border/40">
       <div className="mx-auto max-w-7xl px-4 py-20 md:py-28">
-        <ScrollReveal direction="up">
-          <header className="mx-auto mb-16 max-w-3xl text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                适用于各种场景
-              </span>
-            </h2>
-            <p className="text-base text-muted-foreground md:text-lg">
-              无论你是开发者、产品经理、运营人员还是其他角色， Neurix 都能帮助你提高工作效率。
-            </p>
-          </header>
-        </ScrollReveal>
+        <header className="mx-auto mb-16 max-w-3xl text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              适用于各种场景
+            </span>
+          </h2>
+          <p className="text-base text-muted-foreground md:text-lg">
+            无论你是开发者、产品经理、运营人员还是其他角色， Neurix 都能帮助你提高工作效率。
+          </p>
+        </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {useCases.map((scene, idx) => (
-            <ScrollReveal
+          {useCases.map(scene => (
+            <article
               key={scene.role}
-              direction={idx % 2 === 0 ? 'left' : 'right'}
-              delay={idx * 100}
+              className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift"
             >
-              <div className="group relative overflow-hidden rounded-xl border border-border/60 bg-background p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-lg hover-lift">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg animate-float">
-                    {scene.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground">{scene.role}</h3>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-lg animate-float">
+                  {scene.icon}
                 </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {scene.tasks.map(task => (
-                    <li key={task} className="flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60" />
-                      <span>{task}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-lg font-semibold text-foreground">{scene.role}</h3>
               </div>
-            </ScrollReveal>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {scene.tasks.map(task => (
+                  <li key={task} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60" />
+                    <span>{task}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
           ))}
         </div>
       </div>
